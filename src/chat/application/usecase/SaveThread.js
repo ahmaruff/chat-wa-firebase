@@ -6,19 +6,19 @@ class SaveThread {
     this.threadRepository = threadRepository;
   }
 
-  async execute({id, contactName, contactWAId, displayPhoneNumber, startTime, endTime, lastMessage, status, waBusinessId, lastUpdated}) {
+  async execute({id, contactName, contactWaId, displayPhoneNumber, startTime = null, endTime = null, lastMessage, status, waBusinessId, lastUpdated = null}) {
     try {
       const thread = new Thread({
-        id, 
-        contactName, 
-        contactWAId, 
-        displayPhoneNumber, 
-        startTime, 
-        endTime, 
-        lastMessage, 
-        status, 
-        waBusinessId, 
-        lastUpdated
+        id: id || null,  
+        contactName: contactName, 
+        contactWaId: contactWaId, 
+        displayPhoneNumber: displayPhoneNumber, 
+        startTime: startTime || null, 
+        endTime: endTime || null, 
+        lastMessage: lastMessage, 
+        status: status, 
+        waBusinessId: waBusinessId, 
+        lastUpdated: lastUpdated || null
       });
 
       const savedThread = await this.threadRepository.save(thread);
