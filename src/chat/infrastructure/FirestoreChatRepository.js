@@ -15,9 +15,15 @@ class FirestoreChatRepository extends ChatRepository {
 
   // Helper method to convert Firestore document to Chat entity
   _documentToEntity(doc) {
-    if (!doc.exists) return null;
+    if (!doc || !doc.exists) {
+      return null;
+    }
     
     const data = doc.data();
+    if (!data) {
+      return null;
+    }
+        
     return new Chat({
       id: doc.id,
       sender: data.sender,
@@ -72,7 +78,7 @@ class FirestoreChatRepository extends ChatRepository {
       const chatData = {
         sender: chat.sender,
         thread: chat.thread,
-        message: chat.message,
+        message: chat.messageContent.getValue(),
         unread: chat.unread ?? true,
       };
 
