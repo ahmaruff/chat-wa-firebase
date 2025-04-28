@@ -125,3 +125,5 @@ class FirestoreThreadRepository extends ThreadRepository {
     }
   }
 }
+
+module.exports = FirestoreThreadRepository;
