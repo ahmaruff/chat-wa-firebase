@@ -1,8 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-// const swaggerUi = require('swagger-ui-express');
-// const swaggerSpec = require('./docs/swagger');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./docs/swagger');
 
 const chatRoutes = require('./chat/interface/routes/chat.routes');
 
@@ -39,7 +39,7 @@ app.get('/', (req, res) => {
 });
 
 // Swagger Docs
-// app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use('/chats', chatRoutes);
 
