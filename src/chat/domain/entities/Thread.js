@@ -1,23 +1,22 @@
 class Thread {
-  constructor({id, contactName, contactWaId, displayPhoneNumber, startTime, endTime, lastMessage, status, waBusinessId, lastUpdated}) {
+  constructor({id, contactName, contactWaId, displayPhoneNumber, startTime = null, endTime = null, lastMessage, status, waBusinessId, lastUpdated = null}) {
     if (!contactName) throw new Error('Thread must have a contact name');
     if (!displayPhoneNumber) throw new Error('Thread must have a display phone number');
-    if (!startTime) throw new Error('Thread must have a start time');
-    if (!endTime) throw new Error('Thread must have an end time');
+    // if (!startTime) throw new Error('Thread must have a start time');
+    // if (!endTime) throw new Error('Thread must have an end time');
     if (!lastMessage) throw new Error('Thread must have a last message');
     if (!status) throw new Error('Thread must have a status');
-    if (!lastUpdated) throw new Error('Thread must have a last updated timestamp');
 
     this.id = id || null;
     this.contactName = contactName;
     this.contactWaId = contactWaId || null;
     this.displayPhoneNumber = displayPhoneNumber;
-    this.startTime = startTime;
-    this.endTime = endTime;
+    this.startTime = startTime || null;
+    this.endTime = endTime || null;
     this.lastMessage = lastMessage;
     this.status = status;
     this.waBusinessId = waBusinessId || null;
-    this.lastUpdated = lastUpdated;
+    this.lastUpdated = lastUpdated || null;
   }
 
   toPrimitive() {
