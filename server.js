@@ -23,6 +23,6 @@ app.use('/api', apiApp);
 
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
-    console.log(`API available at ${API_BASE_URL}`);
-    console.log(`Swagger docs at ${API_BASE_URL}/docs`);
+    console.log(`API available at ${API_BASE_URL}/api`);
+    console.log(`Swagger docs at ${API_BASE_URL}/api/docs`);
 });
