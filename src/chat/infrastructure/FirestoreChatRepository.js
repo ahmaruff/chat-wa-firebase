@@ -4,7 +4,7 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-const FIREBASE_CHAT_COLLECTION = process.env('FIREBASE_CHAT_COLLECTION') || 'wa_chat_test';
+const FIREBASE_CHAT_COLLECTION = process.env.FIREBASE_CHAT_COLLECTION || 'wa_chat_test';
 
 class FirestoreChatRepository extends ChatRepository {
   constructor() {
