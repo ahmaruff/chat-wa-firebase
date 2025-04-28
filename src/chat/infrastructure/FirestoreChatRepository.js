@@ -1,6 +1,5 @@
 const admin = require('firebase-admin');
 const ChatRepository = require('../domain/repositories/ChatRepository');
-const ThreadRepository = require('../domain/repositories/ThreadRepository');
 const dotenv = require('dotenv');
 
 dotenv.config();
@@ -12,7 +11,6 @@ class FirestoreChatRepository extends ChatRepository {
     super();
     this.db = admin.firestore();
     this.chatCollection = this.db.collection(FIREBASE_CHAT_COLLECTION);
-    this.threadRepository = new ThreadRepository();  // Initialize ThreadRepository
   }
 
   async save(chat) {
