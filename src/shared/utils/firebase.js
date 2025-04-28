@@ -1,11 +1,13 @@
 const admin = require('firebase-admin');
+const config = require('./configs');
+
 require('dotenv').config();
 
-const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
+const serviceAccountPath = config.firebase.service_account_path;
 
 admin.initializeApp({
   credential: admin.credential.cert(require(serviceAccountPath)),
-  databaseURL: process.env.FIREBASE_DATABASE_URL,  
+  databaseURL: config.firebase.database_url
 });
 
 module.exports = admin;

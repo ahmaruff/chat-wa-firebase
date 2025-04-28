@@ -1,12 +1,10 @@
 const admin = require('../../shared/utils/firebase');
-const dotenv = require('dotenv');
+const config = require('../../shared/utils/configs');
 const ThreadRepository = require('../domain/repositories/ThreadRepository');
 const Thread = require('../domain/entities/Thread');
 const THREAD_STATUS = require('../../shared/constants/chatStatus');
 
-dotenv.config();
-
-const FIREBASE_THREAD_COLLECTION = process.env.FIREBASE_THREAD_COLLECTION || 'wa_thread_test';
+const FIREBASE_THREAD_COLLECTION = config.firebase.thread_collection || 'wa_thread_test';
 
 class FirestoreThreadRepository extends ThreadRepository {
   constructor() {
