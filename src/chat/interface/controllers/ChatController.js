@@ -43,7 +43,7 @@ class ChatController {
         recipientNumber: recipientNumber,
         displayPhoneNumber: senderNumber,
         messageText: messageText,
-        contactName: contactName,
+        contactName: contactName || 'Unknown',
         sender: senderNumber,
         unread: true
       });
