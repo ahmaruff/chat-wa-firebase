@@ -1,4 +1,4 @@
-const admin = require('firebase-admin');
+const admin = require('../../shared/utils/firebase');
 const ChatRepository = require('../domain/repositories/ChatRepository');
 const dotenv = require('dotenv');
 

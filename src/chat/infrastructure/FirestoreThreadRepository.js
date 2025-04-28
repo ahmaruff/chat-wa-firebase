@@ -1,4 +1,4 @@
-const admin = require('firebase-admin');
+const admin = require('../../shared/utils/firebase');
 const dotenv = require('dotenv');
 const ThreadRepository = require('../domain/repositories/ThreadRepository');
 const Thread = require('../domain/entities/Thread');
