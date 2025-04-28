@@ -10,8 +10,8 @@ const config = {
   firebase: {
     service_account_path: process.env.FIREBASE_SERVICE_ACCOUNT_PATH,
     database_url: process.env.FIREBASE_DATABASE_URL,
-    chat_collection: FIREBASE_CHAT_COLLECTION,
-    thread_collection: FIREBASE_THREAD_COLLECITON
+    chat_collection: process.env.FIREBASE_CHAT_COLLECTION,
+    thread_collection: process.env.FIREBASE_THREAD_COLLECITON
   }
 }
 
