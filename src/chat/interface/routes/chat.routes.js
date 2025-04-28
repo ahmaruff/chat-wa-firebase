@@ -36,12 +36,11 @@ const chatController = new ChatController(firestoreThreadRepository, firestoreCh
  *                 description: The content of the message to send
  *               contactName:
  *                 type: string
- *                 description: Display name for the contact
+ *                 description: Display name for the contact (optional)
  *             required:
  *               - waBusinessId
  *               - recipientNumber
  *               - messageText
- *               - contactName
  *     responses:
  *       200:
  *         description: Chat saved successfully
@@ -58,17 +57,57 @@ const chatController = new ChatController(firestoreThreadRepository, firestoreCh
  *                   example: 200
  *                 message:
  *                   type: string
- *                   example: chat saved successfully
+ *                   example: Chat saved successfully
  *                 data:
  *                   type: object
  *                   properties:
  *                     chat_id:
  *                       type: string
  *                       example: abc123
+ *                     thread_id:
+ *                       type: string
+ *                       example: thread456
+ *                     is_new_thread:
+ *                       type: boolean
+ *                       example: true
  *       400:
  *         description: Missing or invalid request parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: Missing required parameters
+ *                 data:
+ *                   type: object
+ *                   nullable: true
  *       500:
  *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: Failed to save chat
+ *                 data:
+ *                   type: object
+ *                   nullable: true
  */
 router.post('/send-message', (req, res) => chatController.save(req, res));
 
