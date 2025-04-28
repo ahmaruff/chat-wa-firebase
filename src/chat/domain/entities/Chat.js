@@ -2,7 +2,6 @@ const MessageContent = require('../valueObjects/MessageContent');
 
 class Chat {
   constructor({id, sender, thread, messageContent, createdAt, unread = true}){
-    if (!id) throw new Error('Chat must have an ID');
     if (!sender) throw new Error('Chat must have a sender');
     if (!thread) throw new Error('Chat must have a thread');
     if (!(messageContent instanceof MessageContent)) {
@@ -10,9 +9,9 @@ class Chat {
     }
     if(!createdAt) throw new Error('Chat must have created_at timestamp');
 
-    this.id = id;
+    this.id = id || null;
     this.sender = sender;
-    this.thread = thread;
+    this.thread = thread || null;
     this.messageContent = messageContent;
     this.unread = unread;
     this.createdAt = createdAt;
