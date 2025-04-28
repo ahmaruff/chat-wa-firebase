@@ -15,6 +15,8 @@ class FirestoreThreadRepository extends ThreadRepository {
 
   async save(thread) {
     try {
+      
+      const timestamp = admin.firestore.FieldValue.serverTimestamp();
       // Check if the thread already exists
       const existingThread = await this.getByWhatsappInfo(thread.waBusinessId, thread.contactWaId);
   
@@ -27,15 +29,20 @@ class FirestoreThreadRepository extends ThreadRepository {
             contact_name: thread.contactName,
             contact_wa_id: thread.contactWaId,
             display_phone_number: thread.displayPhoneNumber,
-            last_message: thread.messageContent.getValue(),
-            last_updated: thread.createdAt,
+            start_time: thread.startTime || timestamp,
+            end_time : thread.endTime || null,
+            last_message: thread.lastMessage,
+            last_updated: thread.lastUpdated || timestamp,
             status: THREAD_STATUS.QUEUE
           });
         } else {
           // If the thread is in 'queue' (0) or 'processed' (1), update the existing thread
           await this.threadCollection.doc(existingThread.id).update({
-            last_message: thread.messageContent.getValue(),
-            last_updated: thread.createdAt,
+            start_time: thread.startTime || timestamp,
+            end_time : thread.endTime || null,
+            last_message: thread.lastMessage,
+            last_updated: thread.lastUpdated || timestamp,
+            status: THREAD_STATUS.QUEUE
           });
           threadRef = this.threadCollection.doc(existingThread.id);
         }
@@ -46,8 +53,10 @@ class FirestoreThreadRepository extends ThreadRepository {
           contact_name: thread.contactName,
           contact_wa_id: thread.contactWaId,
           display_phone_number: thread.displayPhoneNumber,
-          last_message: thread.messageContent.getValue(),
-          last_updated: thread.createdAt,
+          start_time: thread.startTime || timestamp,
+          end_time : thread.endTime || null,
+          last_message: thread.lastMessage,
+          last_updated: thread.lastUpdated || timestamp,
           status: THREAD_STATUS.QUEUE
         });
       }
