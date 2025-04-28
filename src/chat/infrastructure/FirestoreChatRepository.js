@@ -25,9 +25,10 @@ class FirestoreChatRepository extends ChatRepository {
   
       let chatDocRef;
   
-      // If chat already has an ID, we use that, otherwise, Firestore generates one
+      // If chat already has an ID, use that reference, otherwise Firestore will generate one
       if (chat.id) {
         chatDocRef = this.chatCollection.doc(chat.id);
+      } else {
         chatDocRef = this.chatCollection.doc();
         chat.id = chatDocRef.id;
       }
@@ -35,8 +36,12 @@ class FirestoreChatRepository extends ChatRepository {
       const chatData = chat.toPrimitive();
       chatData.thread = threadId;
   
+      if(chatData.created_at == null) {
+        chatData.created_at = admin.firestore.FieldValue.serverTimestamp();
+      }
+  
       await chatDocRef.set(chatData);
-      
+  
       return chatDocRef.id;
     } catch (error) {
       console.error('Error saving chat to Firestore:', error);
