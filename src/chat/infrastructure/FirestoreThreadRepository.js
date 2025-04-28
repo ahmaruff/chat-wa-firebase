@@ -13,60 +13,103 @@ class FirestoreThreadRepository extends ThreadRepository {
     this.threadCollection = this.db.collection(FIREBASE_THREAD_COLLECTION);
   }
 
+  _documentToEntity(doc) {
+    if (!doc.exists) return null;
+    
+    const data = doc.data();
+
+    return new Thread({
+      id: doc.id,
+      waBusinessId: data.wa_business_id,
+      contactName: data.contact_name,
+      contactWaId: data.contact_wa_id,
+      displayPhoneNumber: data.display_phone_number,
+      startTime: data.start_time,
+      endTime: data.end_time,
+      lastMessage: data.last_message,
+      lastUpdated: data.last_updated,
+      status: data.status
+    });
+  }
+
   async save(thread) {
     try {
-      
       const timestamp = admin.firestore.FieldValue.serverTimestamp();
-      // Check if the thread already exists
       const existingThread = await this.getByWhatsappInfo(thread.waBusinessId, thread.contactWaId);
   
       let threadRef;
+      let savedThread;
+
+      // Convert Thread entity to Firestore document data
+      const threadData = {
+        wa_business_id: thread.waBusinessId,
+        contact_name: thread.contactName,
+        contact_wa_id: thread.contactWaId,
+        display_phone_number: thread.displayPhoneNumber,
+        start_time: thread.startTime || timestamp,
+        end_time: thread.endTime || null,
+        last_message: thread.lastMessage,
+        last_updated: thread.lastUpdated || timestamp,
+        status: thread.status || THREAD_STATUS.QUEUE
+      };
+
       if (existingThread) {
         if (existingThread.status === THREAD_STATUS.COMPLETED) {
           // If the thread is completed (status 2), create a new thread
-          threadRef = await this.threadCollection.add({
-            wa_business_id: thread.waBusinessId,
-            contact_name: thread.contactName,
-            contact_wa_id: thread.contactWaId,
-            display_phone_number: thread.displayPhoneNumber,
-            start_time: thread.startTime || timestamp,
-            end_time : thread.endTime || null,
-            last_message: thread.lastMessage,
-            last_updated: thread.lastUpdated || timestamp,
-            status: THREAD_STATUS.QUEUE
-          });
+          threadRef = await this.threadCollection.add(threadData);
+          
+          // Get the complete thread document to return
+          const newThreadDoc = await threadRef.get();
+          savedThread = this._documentToEntity(newThreadDoc);
         } else {
           // If the thread is in 'queue' (0) or 'processed' (1), update the existing thread
-          await this.threadCollection.doc(existingThread.id).update({
-            start_time: thread.startTime || timestamp,
-            end_time : thread.endTime || null,
-            last_message: thread.lastMessage,
-            last_updated: thread.lastUpdated || timestamp,
-            status: THREAD_STATUS.QUEUE
-          });
           threadRef = this.threadCollection.doc(existingThread.id);
+          await threadRef.update(threadData);
+          
+          // Get the updated thread document to return
+          const updatedThreadDoc = await threadRef.get();
+          savedThread = this._documentToEntity(updatedThreadDoc);
         }
       } else {
         // If the thread doesn't exist, create a new thread
-        threadRef = await this.threadCollection.add({
-          wa_business_id: thread.waBusinessId,
-          contact_name: thread.contactName,
-          contact_wa_id: thread.contactWaId,
-          display_phone_number: thread.displayPhoneNumber,
-          start_time: thread.startTime || timestamp,
-          end_time : thread.endTime || null,
-          last_message: thread.lastMessage,
-          last_updated: thread.lastUpdated || timestamp,
-          status: THREAD_STATUS.QUEUE
-        });
+        threadRef = await this.threadCollection.add(threadData);
+        
+        // Get the complete thread document to return
+        const newThreadDoc = await threadRef.get();
+        savedThread = this._documentToEntity(newThreadDoc);
       }
   
-      return threadRef.id;
+      return savedThread;
     } catch (error) {
       console.error('Error saving thread to Firestore:', error);
       throw error;
     }
-  }  
+  }
+
+  async delete(id) {
+    try {
+      if (!id) {
+        throw new Error('Thread ID is required for deletion');
+      }
+      
+      // Periksa apakah thread ada sebelum dihapus
+      const threadDoc = await this.threadCollection.doc(id).get();
+      
+      if (!threadDoc.exists) {
+        console.warn(`Attempted to delete non-existent thread with ID: ${id}`);
+        return false;
+      }
+      
+      // Hapus thread
+      await this.threadCollection.doc(id).delete();
+      
+      console.log(`Thread with ID ${id} successfully deleted`);
+      return true;
+    } catch (error) {
+      console.error(`Error deleting thread with ID ${id}:`, error);
+      throw error;
+    }
+  }
 
   async getByWhatsappInfo(waBusinessId, contactWaId){
     try {
@@ -76,27 +119,9 @@ class FirestoreThreadRepository extends ThreadRepository {
         .limit(1)
         .get();
 
-      if (!existingThreadQuery.empty) {
-        const threadDoc = existingThreadQuery.docs[0];
-        const threadData = threadDoc.data();
+      if (existingThreadQuery.empty) return null;
 
-        const thread = new Thread({
-          id: threadDoc.id,
-          waBusinessId: threadData.wa_business_id,
-          contactName: threadData.contact_name,
-          contactWaId: threadData.contact_wa_id,
-          displayPhoneNumber: threadData.display_phone_number,
-          startTime: threadData.start_time,
-          endTime: threadData.end_time,
-          lastMessage: threadData.last_message,
-          lastUpdated: threadData.last_updated,
-          status: threadData.status          
-        });
-        
-        return thread;
-      }
-
-      return null;
+      return this._documentToEntity(existingThreadQuery.docs[0]);
     } catch (error) {
       console.error('Error get thread by whatsapp info from Firestore:', error);
       throw error;
@@ -111,22 +136,7 @@ class FirestoreThreadRepository extends ThreadRepository {
         return null;
       }
 
-      const threadData = threadDoc.data();
-      const thread = new Thread({
-        id: threadDoc.id,
-        waBusinessId: threadData.wa_business_id,
-        contactName: threadData.contact_name,
-        contactWaId: threadData.contact_wa_id,
-        displayPhoneNumber: threadData.display_phone_number,
-        startTime: threadData.start_time,
-        endTime: threadData.end_time,
-        lastMessage: threadData.last_message,
-        lastUpdated: threadData.last_updated,
-        status: threadData.status          
-      });
-      
-      return thread;
-
+      return this._documentToEntity(threadDoc);
     } catch (error) {
       console.error('Error get by id from Firestore:', error);
       throw error;
