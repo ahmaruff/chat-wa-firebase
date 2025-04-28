@@ -7,8 +7,27 @@ class SaveThread {
   }
 
   async execute({id, contactName, contactWAId, displayPhoneNumber, startTime, endTime, lastMessage, status, waBusinessId, lastUpdated}) {
-    const thread = new Thread({id, contactName, contactWAId, displayPhoneNumber, startTime, endTime, lastMessage, status, waBusinessId, lastUpdated});
-    await this.threadRepository.save(thread);
+    try {
+      const thread = new Thread({
+        id, 
+        contactName, 
+        contactWAId, 
+        displayPhoneNumber, 
+        startTime, 
+        endTime, 
+        lastMessage, 
+        status, 
+        waBusinessId, 
+        lastUpdated
+      });
+
+      const savedThread = await this.threadRepository.save(thread);
+
+      return savedThread;
+    } catch (error) {
+      console.error('Error saving thread:', error);
+      throw error;
+    }
   }
 }
 

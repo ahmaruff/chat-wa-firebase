@@ -1,4 +1,3 @@
-const Thread = require('../../domain/entities/Thread');
 const ThreadRepository = require('../../domain/repositories/ThreadRepository');
 
 class FindThreadByWaInfo {
@@ -9,9 +8,14 @@ class FindThreadByWaInfo {
   async execute({waBusinessId, contactWaId}) {
     try {
       const thread = await this.threadRepository.getByWhatsappInfo(waBusinessId, contactWaId);
+
+      if (!thread) {
+        throw new Error('Thread not found');
+      }
+
       return thread;
     } catch (error) {
-      console.log('ERROR find thread by WA info: ', error);
+      console.error('Error finding thread by WA info:', error);
       throw error;
     }
   }
