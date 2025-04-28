@@ -6,7 +6,7 @@ dotenv.config();
 
 const FIREBASE_CHAT_COLLECTION = process.env('FIREBASE_CHAT_COLLECTION') || 'wa_chat_test';
 
-class FirestoreRepository extends ChatRepository {
+class FirestoreChatRepository extends ChatRepository {
   constructor() {
     super();
     this.db = admin.firestore();
@@ -22,3 +22,5 @@ class FirestoreRepository extends ChatRepository {
     }
   }
 }
+
+module.exports = FirestoreChatRepository;
