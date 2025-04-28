@@ -8,19 +8,15 @@ class SaveChatMessage {
 
   async execute({id, sender, thread, message, createdAt = null, unread = true}) {
     try {
-      if (!(messageContent instanceof MessageContent)) {
-        throw new Error('Invalid message content');
-      }
-
-      messageContent = new MessageContent(message);
+      const messageContent = new MessageContent(message);
 
       const chat = new Chat({
-        id, 
-        sender, 
-        thread, 
-        messageContent, 
-        createdAt, 
-        unread
+        id: id, 
+        sender: sender, 
+        thread: thread, 
+        messageContent: messageContent, 
+        createdAt: createdAt, 
+        unread: unread
       });
 
       // Save the chat using the repository
