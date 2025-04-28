@@ -12,7 +12,7 @@ const chatController = new ChatController(firestoreThreadRepository, firestoreCh
 
 /**
  * @swagger
- * /api/chats/send-message:
+ * /chats/send-message:
  *   post:
  *     summary: Save a new chat message
  *     description: Creates or updates a WhatsApp conversation thread, then saves a new chat message under that thread.
@@ -70,6 +70,14 @@ const chatController = new ChatController(firestoreThreadRepository, firestoreCh
  *       500:
  *         description: Internal server error
  */
-router.post('/send-message', chatController.save(req, res));
+router.post('/send-message', (req, res) => chatController.save(req, res));
+
+router.get('/', (req, res) => {
+  res.json({
+      app_name: "Webhook Chat",
+      description: "webhook chat",
+  });
+});
+
 
 module.exports = router;
