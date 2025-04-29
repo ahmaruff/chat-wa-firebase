@@ -16,6 +16,10 @@ const options = {
         url: 'http://localhost:3000/api',
         description: 'Local API server'
       },
+      {
+        url: 'https:/api.dev.commerce.waktoo.com/api',
+        description: 'Dev API server'
+      },
     ],
   },
   apis: ['./src/**/*.routes.js'],
