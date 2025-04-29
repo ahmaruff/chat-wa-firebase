@@ -41,15 +41,15 @@ class ChannelController {
 
   async getChannel(req, res) {
     try {
-      const { id } = req.body;
+      const { id } = req.params;
 
       const result = await this.channelService.getChannelById(id);
-      return res.status(200).json(responseFormatter(STATUS.SUCCESS, 200, 'Get channel cuccess', {
+      return res.status(200).json(responseFormatter(STATUS.SUCCESS, 200, 'Get channel success', {
         channel: result
       }));
     } catch (error) {
       console.log('Controller - get Channel  Failed: ', error);
-      return res.status(500).json(responseFormatter(STATUS.ERROR, 500, `Controller - Get Channel Failed: ${error.message}`,null));
+      return res.status(404).json(responseFormatter(STATUS.ERROR, 404, `Get Channel Failed: ${error.message}`, null));
     }
   }
 
