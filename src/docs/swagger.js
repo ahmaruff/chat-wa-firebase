@@ -17,7 +17,7 @@ const options = {
         description: 'Local API server'
       },
       {
-        url: 'https:/api.dev.commerce.waktoo.com/api',
+        url: 'https://api.dev.commerce.waktoo.com/api',
         description: 'Dev API server'
       },
     ],
