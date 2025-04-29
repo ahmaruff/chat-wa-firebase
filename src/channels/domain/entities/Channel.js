@@ -77,7 +77,7 @@ class Channel {
   toJSON() {
     return {
       id: this.id,
-      crm_channel_d: this.crmChannelId,
+      crm_channel_id: this.crmChannelId,
       wa_channels: this.waChannels,
       name: this.name,
       is_active: this.isActive,

@@ -22,6 +22,8 @@ class FirestoreChannelRepository {
 
     try {
       const data = channel.toJSON();
+      delete data.id;
+      
       data.updatedAt = Date.now();
 
       let docRef;
