@@ -1,15 +1,12 @@
 const Channel = require('../domain/entities/Channel');
 const config = require('../../shared/utils/configs');
+const admin = require('../../shared/utils/firebase');
 
-const CHANNEL_COLLECTION = config.firebase.channel_collection;
+const CHANNEL_COLLECTION = config.firebase.channel_collection || 'channels_dev';
 
 class FirestoreChannelRepository {
-  /**
-   * Constructor untuk FirestoreChannelRepository
-   * @param {Firestore} firestore - Instance Firestore (opsional, default dari config)
-   */
-  constructor(firestore) {
-    this.db = firestore || config.firebase.firestore;
+  constructor() {
+    this.db = admin.firestore();
     this.collection = this.db.collection(CHANNEL_COLLECTION);
   }
 
