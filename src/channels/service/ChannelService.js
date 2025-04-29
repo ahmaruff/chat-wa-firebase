@@ -65,6 +65,16 @@ class ChannelService {
     }
   }
 
+  async getChannelByCrmChannelId(crmChannelId) {
+    try {
+      const result = await this.manageChannel.getChannelByCrmChannelId(crmChannelId);
+      return result;
+    } catch (error) {
+      console.log('Get Channel by CRM Channel Id failed: ', error);
+      throw error;
+    }
+  }
+
   async findByPhoneNumber(phoneNumberId) {
     try {
       const result = await this.manageChannel.findByPhoneNumberId(phoneNumberId);
