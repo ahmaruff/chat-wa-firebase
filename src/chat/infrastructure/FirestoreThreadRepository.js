@@ -72,10 +72,9 @@ class FirestoreThreadRepository extends ThreadRepository {
           savedThread = this._documentToEntity(updatedThreadDoc);
         }
       } else {
-        // If the thread doesn't exist, create a new thread
-        threadRef = await this.threadCollection.add(threadData);
-        
-        // Get the complete thread document to return
+        threadRef = this.threadCollection.doc();
+        threadData.id = threadRef.id;
+        await threadRef.set(threadData);
         const newThreadDoc = await threadRef.get();
         savedThread = this._documentToEntity(newThreadDoc);
       }

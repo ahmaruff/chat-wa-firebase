@@ -66,36 +66,30 @@ class FirestoreChatRepository extends ChatRepository {
   
       let chatDocRef;
   
-      // If chat already has an ID, use that reference, otherwise Firestore will generate one
       if (chat.id) {
         chatDocRef = this.chatCollection.doc(chat.id);
       } else {
         chatDocRef = this.chatCollection.doc();
-        chat.id = chatDocRef.id; 
+        chat.id = chatDocRef.id;
       }
   
-      // Prepare chat data for Firestore
+      const timestamp = Date.now();
+      const existing = await this.getById(chat.id);
+  
+      // Persiapkan data yang akan disimpan
       const chatData = {
+        id: chat.id,
         sender: chat.sender,
         thread: chat.thread,
         message: chat.messageContent.getValue(),
         unread: chat.unread ?? true,
+        created_at: existing ? existing.created_at : timestamp,
+        updated_at: timestamp,
       };
-
-      // const timestamp = admin.firestore.FieldValue.serverTimestamp();    
-      const timestamp = Date.now();  
-      if (chat.id && await this.getById(chat.id)) {
-        chatData.created_at = timestamp;
-      }
   
-      await chatDocRef.set(chatData);
-
-      // Use merge: true to only update the provided fields for existing documents
-      await chatDocRef.set(chatData, { merge: chat.id && await this.getById(chat.id) });
-      
-      // Get the complete chat document to return
+      await chatDocRef.set(chatData, { merge: true });
+  
       const savedChatDoc = await chatDocRef.get();
-
       return this._documentToEntity(savedChatDoc);
     } catch (error) {
       console.error('Error saving chat to Firestore:', error);
