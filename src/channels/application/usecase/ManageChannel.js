@@ -75,7 +75,7 @@ class ManageChannel {
         displayPhoneNumber: waChannelData.displayPhoneNumber,
         accessToken: waChannelData.accessToken,
         name: waChannelData.name,
-        status: waChannelData.status || 'active',
+        isActive: waChannelData.isActive || true,
         metadata: waChannelData.metadata
       });
 
