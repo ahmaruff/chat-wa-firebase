@@ -6,6 +6,7 @@ const swaggerSpec = require('./docs/swagger');
 
 const chatRoutes = require('./chat/interface/routes/chat.routes');
 const waRoutes = require('./whatsapp/interface/routes/whatsapp.routes');
+const channelRoutes = require('./channels/interface/routes/channel.routes');
 
 dotenv.config();
 
@@ -44,6 +45,7 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use('/chats', chatRoutes);
 app.use('/whatsapp', waRoutes);
+app.use('/channels', channelRoutes);
 
 // === Error Handling ===
 // 404
