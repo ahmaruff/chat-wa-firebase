@@ -22,7 +22,6 @@ class FirestoreChannelRepository {
 
     try {
       const data = channel.toJSON();
-      delete data.id;
       
       data.updatedAt = Date.now();
 
@@ -34,8 +33,10 @@ class FirestoreChannelRepository {
         return new Channel({ ...data, id: docRef.id });
       } else {
         // Create new document
+        docRef = this.collection.doc(); // generate ID dulu
+        data.id = docRef.id;  
         data.createdAt = Date.now();
-        docRef = await this.collection.add(data);
+        await docRef.set(data);
         return new Channel({ ...data, id: docRef.id });
       }
     } catch (error) {
