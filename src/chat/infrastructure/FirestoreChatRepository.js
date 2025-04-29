@@ -82,15 +82,10 @@ class FirestoreChatRepository extends ChatRepository {
         unread: chat.unread ?? true,
       };
 
-      const timestamp = admin.firestore.FieldValue.serverTimestamp();      
+      // const timestamp = admin.firestore.FieldValue.serverTimestamp();    
+      const timestamp = Date.now();  
       if (chat.id && await this.getById(chat.id)) {
-        if (chat.createdAt) {
-          chatData.created_at = timestamp;
-        }
-
-        chatData.created_at = chat.createdAt 
-          ? admin.firestore.Timestamp.fromDate(chat.createdAt) 
-          : timestamp;
+        chatData.created_at = timestamp;
       }
   
       await chatDocRef.set(chatData);

@@ -34,7 +34,8 @@ class FirestoreThreadRepository extends ThreadRepository {
 
   async save(thread) {
     try {
-      const timestamp = admin.firestore.FieldValue.serverTimestamp();
+      // const timestamp = admin.firestore.FieldValue.serverTimestamp();
+      const timestamp = Date.now();
       const existingThread = await this.getByWhatsappInfo(thread.waBusinessId, thread.contactWaId);
   
       let threadRef;
