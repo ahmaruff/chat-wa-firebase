@@ -62,7 +62,11 @@ class ManageChannel {
 
       // Periksa apakah wabaId sudah ada
       if (channel.hasWhatsAppChannel(wabaId)) {
-        throw new Error(`WhatsApp channel with wabaId ${wabaId} already exists in this Channel`);
+        return {
+          channel: channel,
+          whatsappChannel: channel.getWhatsAppChannel(wabaId)
+        }
+        // throw new Error(`WhatsApp channel with wabaId ${wabaId} already exists in this Channel`);
       }
 
       // Buat WhatsApp channel baru
@@ -85,7 +89,10 @@ class ManageChannel {
 
       // Simpan perubahan
       const updatedChannel = await this.channelRepository.save(channel);
-      return updatedChannel;
+      return {
+        channel: updatedChannel,
+        whatsappChannel: updatedChannel.getWhatsAppChannel(wabaId)
+      }
     } catch (error) {
       console.error('Error adding WhatsApp channel:', error);
       throw error;
