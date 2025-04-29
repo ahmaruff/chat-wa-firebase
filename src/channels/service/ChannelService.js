@@ -67,7 +67,7 @@ class ChannelService {
 
   async getChannelByCrmChannelId(crmChannelId) {
     try {
-      const result = await this.manageChannel.getChannelByCrmChannelId(crmChannelId);
+      const result = await this.manageChannel.findByCrmChannelId(crmChannelId);
       return result;
     } catch (error) {
       console.log('Get Channel by CRM Channel Id failed: ', error);

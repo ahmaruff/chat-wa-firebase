@@ -186,6 +186,17 @@ class ManageChannel {
     }
   }
 
+  async findByCrmChannelId(crmChannelId) {
+    try {
+      const channel = this.channelRepository.getByCrmChannelId(crmChannelId);
+
+      return channel;
+    } catch (error) {
+      console.error('Error finding Channel by crmChannelId:', error);
+      throw error;
+    }
+  }
+
   /**
    * Mendapatkan semua Channel
    * @param {boolean} activeOnly - Jika true, hanya mengembalikan channel yang aktif
