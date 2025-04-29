@@ -4,6 +4,7 @@ const ThreadRepository = require('../infrastructure/FirestoreThreadRepository');
 
 class ChatService extends ChatServiceInterface {
   constructor() {
+    super();
     this.threadRepository = new ThreadRepository();
     this.saveChatWithThread = new SaveChatWithThread(this.threadRepository);
   }
