@@ -28,10 +28,6 @@ class ManageChannel {
         waChannels: {}
       });
 
-      if (!channel.isValid()) {
-        throw new Error('Invalid Channel data');
-      }
-
       const savedChannel = await this.channelRepository.save(channel);
       return savedChannel;
     } catch (error) {
