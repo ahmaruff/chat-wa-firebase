@@ -17,7 +17,7 @@ const channelController = new ChannelController(firestoreChannelRepository);
  * @swagger
  * /channels:
  *   post:
- *     summary: Create a new Channel
+ *     summary: Create or update a Channel
  *     tags: [Channels]
  *     requestBody:
  *       required: true
@@ -41,11 +41,12 @@ const channelController = new ChannelController(firestoreChannelRepository);
  *     responses:
  *       201:
  *         description: Channel created
+ *       200:
+ *         description: Channel updated
  *       500:
  *         description: Server error
  */
 router.post('/', (req, res) => channelController.save(req, res));
-
 
 /**
  * @swagger
@@ -63,6 +64,8 @@ router.post('/', (req, res) => channelController.save(req, res));
  *     responses:
  *       200:
  *         description: Channel detail
+ *       404:
+ *         description: Channel not found
  *       500:
  *         description: Server error
  */
@@ -80,21 +83,35 @@ router.get('/:id', (req, res) => channelController.getChannel(req, res));
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - channelId
+ *               - waBusinessId
+ *               - phoneNumberId
  *             properties:
  *               channelId:
  *                 type: string
+ *                 example: "channel-123"
+ *               waBusinessId:
+ *                 type: string
+ *                 example: "waba-123"
  *               phoneNumberId:
  *                 type: string
- *               phoneNumber:
+ *                 example: "wa-phone-id-456"
+ *               displayPhoneNumber:
  *                 type: string
- *               provider:
+ *                 example: "+6281234567890"
+ *               name:
  *                 type: string
- *                 enum: [360dialog, twilio, other]
- *             required:
- *               - channelId
- *               - phoneNumberId
- *               - phoneNumber
- *               - provider
+ *                 example: "Support Line"
+ *               accessToken:
+ *                 type: string
+ *                 example: "EAAJZCZCx..."
+ *               isActive:
+ *                 type: boolean
+ *                 example: true
+ *               metadata:
+ *                 type: object
+ *                 example: { region: "Asia", department: "Support" }
  *     responses:
  *       200:
  *         description: Whatsapp channel added
@@ -124,9 +141,39 @@ router.post('/add-whatsapp-channel', (req, res) => channelController.addWhatsApp
  *     responses:
  *       200:
  *         description: Channel and WhatsappChannel found
+ *       400:
+ *         description: phoneNumberId required
  *       500:
  *         description: Server error
  */
 router.post('/find-by-phone', (req, res) => channelController.findByPhoneNumber(req, res));
+
+/**
+ * @swagger
+ * /channels/find-by-crm-channel:
+ *   post:
+ *     summary: Find Channel by CRM Channel ID
+ *     tags: [Channels]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - crmChannelId
+ *             properties:
+ *               crmChannelId:
+ *                 type: string
+ *                 example: "crm-001"
+ *     responses:
+ *       200:
+ *         description: Channel found
+ *       400:
+ *         description: crmChannelId required
+ *       404:
+ *         description: Channel not found
+ */
+router.post('/find-by-crm-channel', (req, res) => channelController.findByCrmChannelId(req, res));
 
 module.exports = router;

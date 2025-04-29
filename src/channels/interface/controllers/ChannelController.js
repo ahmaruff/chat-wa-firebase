@@ -13,6 +13,19 @@ class ChannelController {
     try {
       const {crmChannelId, name, isActive = true} = req.body;
 
+      const existingChannel = await this.channelService.getChannelByCrmChannelId(crmChannelId);
+
+      if(existingChannel) {
+        const updatedChannel = await this.channelService.updateChannel(existingChannel.id, {
+          name: name || existingChannel.name,
+          isActive: isActive || existingChannel.isActive
+        });
+
+        return res.status(200).json(responseFormatter(STATUS.SUCCESS, 200, 'Channel exists, Channel updated', {
+          channel: updatedChannel
+        }));
+      }
+
       const result = await this.channelService.createChannel({
         id: null,
         crmChannelId: crmChannelId,
@@ -32,7 +45,23 @@ class ChannelController {
 
   async addWhatsAppChannel(req, res) {
     try {
-      
+      const {channelId, waBusinessId, phoneNumberId, name = 'Unknown', displayPhoneNumber, accessToken = null, isActive = true, metadata = {} } = req.body;
+
+      const result = await this.channelService.addWhatsAppChannel({
+        channelId: channelId,
+        wabaId: waBusinessId,
+        phoneNumberId: phoneNumberId,
+        name: name || 'Unknown',
+        displayPhoneNumber: displayPhoneNumber || phoneNumberId,
+        accessToken: accessToken || null,
+        isActive: isActive || true,
+        metadata: metadata || {}
+      });
+
+      return res.status(200).json(responseFormatter(STATUS.SUCCESS, 200, 'Whatsapp Channel Added', {
+        channel: result.channel,
+        whatsappChannel: result.whatsappChannel
+      }));
     } catch (error) {
       console.log('Controller - Add Whatsapp Channel  Failed: ', error);
       return res.status(500).json(responseFormatter(STATUS.ERROR, 500, `Add Whatsapp Channel Failed: ${error.message}`,null));
@@ -56,6 +85,11 @@ class ChannelController {
   async findByPhoneNumber(req, res) {
     try {
       const { phoneNumberId } = req.body;
+      
+      if(!phoneNumberId) {
+        return res.status(400).json(responseFormatter(STATUS.ERROR, 400, `Error: phoneNumberId required`,null));
+      }
+
       const result = await this.channelService.findByPhoneNumber(phoneNumberId);
 
       return res.status(200).json(responseFormatter(STATUS.SUCCESS, 200, 'get channel by phone number', {
@@ -65,6 +99,24 @@ class ChannelController {
     } catch (error) {
       console.log('Controller - Find By Phone Number  Failed: ', error);
       return res.status(500).json(responseFormatter(STATUS.ERROR, 500, `Controller - Find By Phone Number Failed: ${error.message}`,null));
+    }
+  }
+
+  async findByCrmChannelId(req, res) {
+    try {
+      const {crmChannelId} = req.body;
+
+      if(!crmChannelId) {
+        return res.status(400).json(responseFormatter(STATUS.ERROR, 400, `Error: crmChannelId required`,null));
+      }
+
+      const result = await this.channelService.getChannelByCrmChannelId(crmChannelId);
+      return res.status(200).json(responseFormatter(STATUS.SUCCESS, 200, 'get channel by crmChannel Id success', {
+        channel: result
+      }));
+    } catch (error) {
+      console.log('Controller - Find By CRM Channel Id Failed: ', error);
+      return res.status(404).json(responseFormatter(STATUS.ERROR, 404, `Controller - Find By CRM Channel Id Failed: ${error.message}`,null));
     }
   }
 }
