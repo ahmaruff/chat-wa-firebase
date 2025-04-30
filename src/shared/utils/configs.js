@@ -13,6 +13,9 @@ const config = {
     chat_collection: process.env.FIREBASE_CHAT_COLLECTION,
     thread_collection: process.env.FIREBASE_THREAD_COLLECITON,
     channel_collection: process.env.FIREBASE_CHANNEL_COLLECTION 
+  },
+  whatsapp: {
+    verify_token: process.env.WHATSAPP_VERIFY_TOKEN,
   }
 }
 

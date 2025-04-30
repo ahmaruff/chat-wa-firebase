@@ -49,7 +49,7 @@ class ProcessWhatsappWebhook {
    * @returns {Object} - Hasil verifikasi
    */
   verifyWebhook(mode, token, challenge) {
-    const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN || config.whatsapp.verifyToken;
+    const verifyToken = config.whatsapp.verify_token;
     
     if (mode && token) {
       if (mode === 'subscribe' && token === verifyToken) {
