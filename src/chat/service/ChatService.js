@@ -1,12 +1,14 @@
 const ChatServiceInterface = require('../interface/services/ChatServiceInterface');
 const SaveChatWithThread = require('../application/usecase/SaveChatWithThread');
-const ThreadRepository = require('../infrastructure/FirestoreThreadRepository');
+const FirestoreThreadRepository = require('../infrastructure/FirestoreThreadRepository');
+const FirestoreChatRepository = require('../infrastructure/FirestoreChatRepository');
 
 class ChatService extends ChatServiceInterface {
   constructor() {
     super();
-    this.threadRepository = new ThreadRepository();
-    this.saveChatWithThread = new SaveChatWithThread(this.threadRepository);
+    this.threadRepository = new FirestoreThreadRepository();
+    this.chatRepository = new FirestoreChatRepository();
+    this.saveChatWithThread = new SaveChatWithThread(this.threadRepository, this.chatRepository);
   }
 
   async createChatFromExternalSource({ chatId, senderNumber,  recipientNumber, contactName, messageText, waBusinessId, status, unread, displayPhoneNumber, createdAt, replyTo, repliedBy }) {
