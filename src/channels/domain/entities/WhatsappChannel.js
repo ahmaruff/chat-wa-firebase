@@ -14,16 +14,18 @@ class WhatsappChannel {
    * @param {Object} data.metadata - Metadata tambahan (opsional)
    * @param {number} data.createdAt - Timestamp pembuatan (opsional)
    * @param {number} data.updatedAt - Timestamp update terakhir (opsional)
+   * @param {string[]} data.participants - list id user
    */
   constructor(data) {
     this.phoneNumberId = data.phoneNumberId;
     this.displayPhoneNumber = data.displayPhoneNumber;
     this.accessToken = data.accessToken || null;
     this.name = data.name || null;
-    this.isActive = data.isActive || true;
+    this.isActive = typeof data.isActive === 'boolean' ? data.isActive : true;
     this.metadata = data.metadata || {};
-    this.createdAt = data.createdAt || Date.now();
-    this.updatedAt = data.updatedAt || Date.now();
+    this.participants = Array.isArray(data.participants) ? data.participants : [];
+    this.createdAt = typeof data.createdAt === 'number' ? data.createdAt : Date.now();
+    this.updatedAt = typeof data.createdAt === 'number' ? data.createdAt : Date.now();
   }
 
   /**
@@ -62,8 +64,9 @@ class WhatsappChannel {
       name: this.name,
       is_active: this.isActive,
       metadata: this.metadata,
-      created_at: this.createdAt,
-      updated_at: this.updatedAt
+      participants: this.participants,
+      created_at: typeof this.createdAt === 'number' ? this.createdAt : Date.now(),
+      updated_at: typeof this.updatedAt === 'number' ? this.updatedAt : Date.now()
     };
   }
 
@@ -74,7 +77,8 @@ class WhatsappChannel {
       name: data.name,
       isActive: data.is_active,
       accessToken: data.access_token,
-      metadata: data.metadata,
+      metadata: data.metadata || {},
+      participants: Array.isArray(data.participants) ? data.participants : [],
       createdAt: data.created_at,
       updatedAt: data.updated_at
     });
@@ -85,13 +89,13 @@ class WhatsappChannel {
   
     const data = doc.data();
     return new WhatsappChannel({
-      id: doc.id,
       phoneNumberId: data.phone_number_id,
       displayPhoneNumber: data.display_phone_number,
       name: data.name,
       isActive: data.is_active,
       accessToken: data.access_token,
       metadata: data.metadata,
+      participants: Array.isArray(data.participants) ? data.participants : [],
       createdAt: data.created_at,
       updatedAt: data.updated_at
     });
