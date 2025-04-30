@@ -55,7 +55,7 @@ class SaveChatWithThread {
         id: id,
         chatId: chatId,
         sender: sender,
-        thread: thread,
+        thread: thread.id,
         messageContent: new MessageContent(messageText),
         createdAt: null,
         unread: unread,
