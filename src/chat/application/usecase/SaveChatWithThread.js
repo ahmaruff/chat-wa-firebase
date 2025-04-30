@@ -12,14 +12,18 @@ class SaveChatWithThread {
 
   async execute({
     id,
-    waBusinessId,
-    recipientNumber,
-    displayPhoneNumber,
-    messageText,
-    contactName,
+    chatId,
     sender,
+    recipientNumber,
+    contactName,
+    messageText,
+    waBusinessId,
     status = THREAD_STATUS.QUEUE,
-    unread = true
+    unread,
+    displayPhoneNumber,
+    createdAt = Date.now(),
+    replyTo,
+    repliedBy
   }) {
     let isNewThread = false;
     let originalThread = null;
@@ -30,6 +34,7 @@ class SaveChatWithThread {
 
       thread = new Thread({
         id: null,
+        waBusinessId: waBusinessId,
         contactName: contactName,
         contactWaId: recipientNumber,
         displayPhoneNumber: displayPhoneNumber,
@@ -48,11 +53,15 @@ class SaveChatWithThread {
     try {
       const chat = new Chat({
         id: id,
+        chatId: chatId,
         sender: sender,
-        thread: thread.id,
+        thread: thread,
         messageContent: new MessageContent(messageText),
         createdAt: null,
-        unread: unread
+        unread: unread,
+        createdAt: createdAt,
+        repliedBy: repliedBy || null,
+        replyTo: replyTo || null
       });
       
       const chatRes = await this.chatRepository.save(chat);

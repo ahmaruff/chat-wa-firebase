@@ -9,19 +9,23 @@ class ChatService extends ChatServiceInterface {
     this.saveChatWithThread = new SaveChatWithThread(this.threadRepository);
   }
 
-  async createChatFromExternalSource({ waBusinessId, recipientNumber, messageText, contactName }) {
+  async createChatFromExternalSource({ chatId, senderNumber,  recipientNumber, contactName, messageText, waBusinessId, status, unread, displayPhoneNumber, createdAt, replyTo, repliedBy }) {
     try {
       const result = await this.saveChatWithThread.execute({
-        id: null,
-        waBusinessId: waBusinessId,
-        recipientNumber: recipientNumber,
-        displayPhoneNumber: senderNumber,
-        messageText: messageText,
-        contactName: contactName || 'Unknown',
+        chatId: chatId,
         sender: senderNumber,
-        unread: true
+        recipientNumber: recipientNumber,
+        contactName: contactName,
+        messageText: messageText,
+        waBusinessId: waBusinessId,
+        status: status,
+        unread: unread,
+        displayPhoneNumber: displayPhoneNumber,
+        createdAt: createdAt,
+        replyTo: replyTo,
+        repliedBy: repliedBy
       });
-  
+
       return result;
     } catch (error) {
       console.log('Error create chat from external source: ', error);

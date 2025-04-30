@@ -18,7 +18,7 @@ class WhatsappMessage {
     
     // Additional fields
     this.status = data.status || 'received';
-    this.processedAt = data.processedAt || Date.now();
+    this.createdAt = data.createdAt || Date.now();
   }
 
   toJSON() {
@@ -28,13 +28,13 @@ class WhatsappMessage {
       timestamp: this.timestamp,
       type: this.type,
       body: this.body,
-      waBusinessAccountId: this.waBusinessAccountId,
-      phoneNumberId: this.phoneNumberId,
-      displayPhoneNumber: this.displayPhoneNumber,
-      contactName: this.contactName,
-      contactWaId: this.contactWaId,
+      wa_business_id: this.waBusinessAccountId,
+      phone_number_d: this.phoneNumberId,
+      display_phone_number: this.displayPhoneNumber,
+      contact_name: this.contactName,
+      contact_wa_id: this.contactWaId,
       status: this.status,
-      processedAt: this.processedAt
+      created_at: this.createdAt
     };
   }
 
@@ -91,7 +91,7 @@ class WhatsappMessage {
         contactName: contact && contact.profile ? contact.profile.name : null,
         contactWaId: contact ? contact.wa_id : null,
         status: 'received',
-        processedAt: Date.now()
+        createdAt: Date.now()
       });
     } catch (error) {
       console.error('Error parsing WhatsApp payload:', error);
@@ -105,12 +105,14 @@ class WhatsappMessage {
    */
   toChatServiceFormat() {
     return {
-      waBusinessId: this.phoneNumberId,
+      waBusinessId: this.waBusinessAccountId,
+      phoneNumberId: this.phoneNumberId,
       recipientNumber: this.displayPhoneNumber,
       messageText: this.body,
       contactName: this.contactName || 'Unknown',
       senderNumber: this.from,
-      displayPhoneNumber: this.displayPhoneNumber
+      displayPhoneNumber: this.displayPhoneNumber,
+      status: this.status
     };
   }
 }

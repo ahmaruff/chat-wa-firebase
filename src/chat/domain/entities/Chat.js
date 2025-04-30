@@ -1,7 +1,7 @@
 const MessageContent = require('../valueObjects/MessageContent');
 
 class Chat {
-  constructor({id, sender, thread, messageContent, createdAt = null, unread = true, chatId = null, replyTo = null, repliedBy = null}){
+  constructor({id, sender, thread, messageContent, createdAt = null, unread = true, chatId = null, replyTo = null, repliedBy = null, createdAt = null}){
     if (!sender) throw new Error('Chat must have a sender');
     if (!thread) throw new Error('Chat must have a thread');
     if (!(messageContent instanceof MessageContent)) {
@@ -16,7 +16,8 @@ class Chat {
     this.unread = unread;
     this.createdAt = createdAt || null;
     this.replyTo = replyTo || null;
-    this.repliedBy = this.repliedBy | null;
+    this.repliedBy = repliedBy | null;
+    this.createdAt = createdAt || Date.now();
   }
 
   toPrimitive() {
@@ -42,7 +43,8 @@ class Chat {
       unread: data.unread,
       chatId: data.chat_id,
       replyTo: data.reply_to,
-      repliedBy: data.replied_by
+      repliedBy: data.replied_by,
+      createdAt: data.created_at
     });
   }
 
@@ -60,7 +62,7 @@ class Chat {
       unread: data.unread,
       chatId: data.chat_id,
       replyTo: data.reply_to,
-      repliedBy: data.replied_by
+      repliedBy: data.replied_by,
     });
   }
 }
