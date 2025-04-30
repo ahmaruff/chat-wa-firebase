@@ -69,17 +69,6 @@ class FirestoreChatRepository extends ChatRepository {
       const timestamp = Date.now();
       const existing = await this.getById(chat.id);
   
-      // id: data.id,
-      // sender: data.sender,
-      // thread: data.thread,
-      // messageContent: new MessageContent(data.message),
-      // createdAt: data.created_at,
-      // unread: data.unread,
-      // chatId: data.chat_id,
-      // replyTo: data.reply_to,
-      // repliedBy: data.replied_by,
-      // createdAt: data.created_at
-      // Persiapkan data yang akan disimpan
       const chatData = {
         id: chat.id,
         sender: chat.sender,
