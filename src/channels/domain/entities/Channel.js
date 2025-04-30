@@ -1,3 +1,5 @@
+const WhatsappChannel = require("./WhatsappChannel");
+
 class Channel {
   /**
    * Constructor untuk Channel
@@ -53,10 +55,22 @@ class Channel {
   findWhatsAppChannelByPhoneNumberId(phoneNumberId) {
     for (const [wabaId, channel] of Object.entries(this.waChannels)) {
       if (channel.phoneNumberId === phoneNumberId) {
+
+        const waChannel = new WhatsappChannel({
+          phoneNumberId: channel.phoneNumberId,
+          displayPhoneNumber: channel.displayPhoneNumber,
+          accessToken: channel.accessToken,
+          createdAt: channel.createdAt,
+          isActive: channel.isActive,
+          metadata: channel.metadata,
+          name: channel.name,
+          updatedAt: channel.updatedAt
+        });
+
         return {
-          wabaId,
-          ...channel
-        };
+          wabaId: wabaId,
+          whatsappChannel: waChannel
+        }
       }
     }
     return null;
