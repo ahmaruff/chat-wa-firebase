@@ -1,7 +1,7 @@
 const MessageContent = require('../valueObjects/MessageContent');
 
 class Chat {
-  constructor({id, sender, thread, messageContent, createdAt = null, unread = true, chatId = null, replyTo = null, repliedBy = null, createdAt = null}){
+  constructor({id, sender, thread, messageContent, unread = true, chatId = null, replyTo = null, repliedBy = null, createdAt = null}){
     if (!sender) throw new Error('Chat must have a sender');
     if (!thread) throw new Error('Chat must have a thread');
     if (!(messageContent instanceof MessageContent)) {
