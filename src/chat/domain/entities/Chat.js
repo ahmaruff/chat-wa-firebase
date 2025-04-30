@@ -39,7 +39,6 @@ class Chat {
       sender: data.sender,
       thread: data.thread,
       messageContent: new MessageContent(data.message),
-      createdAt: data.created_at,
       unread: data.unread,
       chatId: data.chat_id,
       replyTo: data.reply_to,
