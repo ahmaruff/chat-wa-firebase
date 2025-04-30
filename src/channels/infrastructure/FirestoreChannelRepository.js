@@ -31,15 +31,15 @@ class FirestoreChannelRepository {
         docRef = this.collection.doc(channel.id);
         await docRef.update(data);
         
-        const channel = Channel.fromFirestore(doc);
-        return channel;
+        const c = Channel.fromFirestore(doc);
+        return c;
       } else {
         // Create new document
         docRef = this.collection.doc(); // generate ID dulu
         data.id = docRef.id;  
         data.createdAt = Date.now();
         await docRef.set(data);
-        return new Channel({ ...data, id: docRef.id });
+        return Channel.fromFirestore(docRef);
       }
     } catch (error) {
       console.error('Error saving Channel:', error);
