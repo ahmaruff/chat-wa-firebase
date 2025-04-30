@@ -85,17 +85,21 @@ class ChannelController {
   async findByPhoneNumber(req, res) {
     try {
       const { phoneNumberId } = req.body;
-      
+
       if(!phoneNumberId) {
         return res.status(400).json(responseFormatter(STATUS.ERROR, 400, `Error: phoneNumberId required`,null));
       }
 
       const result = await this.channelService.findByPhoneNumber(phoneNumberId);
 
-      return res.status(200).json(responseFormatter(STATUS.SUCCESS, 200, 'get channel by phone number', {
-        channel: result.channel,
-        WhatsappChannel: result.whatsappChannel
-      }));
+      if(result) {
+        return res.status(200).json(responseFormatter(STATUS.SUCCESS, 200, 'get channel by phone number', {
+          channel: result.channel,
+          WhatsappChannel: result.whatsappChannel
+        }));
+      }
+
+      return res.status(404).json(responseFormatter(STATUS.FAIL, 404, 'channel not found', null));
     } catch (error) {
       console.log('Controller - Find By Phone Number  Failed: ', error);
       return res.status(500).json(responseFormatter(STATUS.ERROR, 500, `Controller - Find By Phone Number Failed: ${error.message}`,null));
