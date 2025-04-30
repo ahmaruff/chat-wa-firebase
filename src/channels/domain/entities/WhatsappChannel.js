@@ -66,6 +66,36 @@ class WhatsappChannel {
       updated_at: this.updatedAt
     };
   }
+
+  static fromJson(data) {
+    return new WhatsappChannel({
+      phoneNumberId: data.phone_number_id,
+      displayPhoneNumber: data.display_phone_number,
+      name: data.name,
+      isActive: data.is_active,
+      accessToken: data.access_token,
+      metadata: data.metadata,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
+    });
+  }
+
+  static fromFirestore(doc) {
+    if (!doc.exists) return null;
+  
+    const data = doc.data();
+    return new WhatsappChannel({
+      id: doc.id,
+      phoneNumberId: data.phone_number_id,
+      displayPhoneNumber: data.display_phone_number,
+      name: data.name,
+      isActive: data.is_active,
+      accessToken: data.access_token,
+      metadata: data.metadata,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
+    });
+  }
 }
 
 module.exports = WhatsappChannel;

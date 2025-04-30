@@ -17,16 +17,16 @@ class Channel {
       throw new Error("crmChannelId is required");
     }
     if (typeof data.waChannels !== 'object' || data.waChannels === null) {
-      throw new Error("waChannels must be an object");
+      throw new Error("waChannels must be a non-null object");
     }
-
+  
     this.id = data.id || null;
     this.crmChannelId = data.crmChannelId;
-    this.waChannels = data.waChannels || {}; // Object/Map dengan wabaId sebagai key
-    this.name = data.name || null;
+    this.waChannels = data.waChannels;
+    this.name = data.name ?? null;
     this.isActive = typeof data.isActive === 'boolean' ? data.isActive : true;
-    this.createdAt = data.createdAt || Date.now();
-    this.updatedAt = data.updatedAt || Date.now();
+    this.createdAt = typeof data.createdAt === 'number' ? data.createdAt : Date.now();
+    this.updatedAt = typeof data.updatedAt === 'number' ? data.updatedAt : Date.now();
   }
 
   /**
@@ -96,10 +96,14 @@ class Channel {
    * @returns {Object} - Representasi JSON dari Meta Channel
    */
   toJSON() {
+    const wa_channels = {};
+    for (const [wabaId, channel] of Object.entries(this.waChannels)) {
+      wa_channels[wabaId] = channel.toJSON();
+    }
     return {
       id: this.id,
       crm_channel_id: this.crmChannelId,
-      wa_channels: this.waChannels,
+      wa_channels: wa_channels,
       name: this.name,
       is_active: this.isActive,
       created_at: this.createdAt,
@@ -111,11 +115,17 @@ class Channel {
     if (!doc.exists) return null;
   
     const data = doc.data();
+    const rawWaChannels = data.wa_channels || {};
+    const waChannels = {};
+  
+    for (const [wabaId, channelData] of Object.entries(rawWaChannels)) {
+      waChannels[wabaId] = WhatsappChannel.fromJson(channelData);
+    }
   
     return new Channel({
       id: doc.id,
       crmChannelId: data.crm_channel_id,
-      waChannels: data.wa_channels,
+      waChannels: waChannels,
       name: data.name,
       isActive: data.is_active,
       createdAt: data.created_at,
