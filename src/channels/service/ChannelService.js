@@ -94,7 +94,7 @@ class ChannelService {
 
   async findByParticipantId(channelId, participantId) {
     try {
-      const result = this.manageChannel.findByParticipantsId(channelId, participantId);
+      const result = await this.manageChannel.findByParticipantsId(channelId, participantId);
 
       if(result) {
         return {

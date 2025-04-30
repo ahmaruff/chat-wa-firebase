@@ -179,7 +179,7 @@ router.post('/find-by-crm-channel', (req, res) => channelController.findByCrmCha
 
 /**
  * @swagger
- * /find-by-participant:
+ * /channels/find-by-participant:
  *   post:
  *     summary: Find Channel and WhatsApp Channel by Participant ID
  *     description: Retrieve a channel and its WhatsApp channels that a specific participant is involved in.
