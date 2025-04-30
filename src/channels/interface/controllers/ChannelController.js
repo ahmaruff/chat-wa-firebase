@@ -51,12 +51,12 @@ class ChannelController {
         channelId: channelId,
         wabaId: waBusinessId,
         phoneNumberId: phoneNumberId,
-        name: name || 'Unknown',
-        displayPhoneNumber: displayPhoneNumber || phoneNumberId,
+        name: name,
+        displayPhoneNumber: displayPhoneNumber,
         accessToken: accessToken || null,
-        isActive: isActive || true,
         metadata: metadata || {},
-        participants: participants || []
+        participants: participants || [],
+        isActive: isActive || true
       });
 
       return res.status(200).json(responseFormatter(STATUS.SUCCESS, 200, 'Whatsapp Channel Added', {
