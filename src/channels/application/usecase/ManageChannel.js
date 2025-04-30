@@ -50,8 +50,8 @@ class ManageChannel {
         throw new Error('channelId and wabaId are required');
       }
 
-      if (!waChannelData.phoneNumberId || !waChannelData.displayPhoneNumber) {
-        throw new Error('phoneNumberId and displayPhoneNumber are required');
+      if (!waChannelData.phone_number_id || !waChannelData.display_phone_number) {
+        throw new Error('Manage: phone_number_id and display_phone_number are required');
       }
 
       // Ambil Channel
