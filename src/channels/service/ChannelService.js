@@ -23,7 +23,7 @@ class ChannelService {
     }
   }
 
-  async addWhatsAppChannel({channelId, wabaId, phoneNumberId, name, displayPhoneNumber = null, accessToken= null, isActive = null, metadata = {}}) {
+  async addWhatsAppChannel({channelId, wabaId, phoneNumberId, name, displayPhoneNumber = null, accessToken= null, isActive = null, metadata = {}, participants = []}) {
     try {
         const wa = {
           phoneNumberId: phoneNumberId,
@@ -31,7 +31,8 @@ class ChannelService {
           displayPhoneNumber: displayPhoneNumber || phoneNumberId,
           accessToken: accessToken || null,
           isActive: isActive || true,
-          metadata: metadata || {}
+          metadata: metadata || {},
+          participants: participants || []
         }
 
         const result = await this.manageChannel.addWhatsAppChannel(channelId, wabaId, wa);
