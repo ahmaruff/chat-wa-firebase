@@ -31,7 +31,7 @@ class FirestoreChannelRepository {
         docRef = this.collection.doc(channel.id);
         await docRef.update(data);
         
-        const c = Channel.fromFirestore(doc);
+        const c = Channel.fromFirestore(docRef);
         return c;
       } else {
         // Create new document
