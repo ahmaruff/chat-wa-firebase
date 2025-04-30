@@ -98,7 +98,7 @@ class Channel {
   toJSON() {
     const wa_channels = {};
     for (const [wabaId, channel] of Object.entries(this.waChannels)) {
-      if (!channel instanceof WhatsappChannel) {
+      if (channel instanceof WhatsappChannel) {
         wa_channels[wabaId] = channel.toJSON();
       } else {
         wa_channels[wabaId] = channel;
