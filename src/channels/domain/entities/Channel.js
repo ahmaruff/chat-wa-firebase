@@ -11,11 +11,18 @@ class Channel {
    * @param {number} data.updatedAt - Timestamp update terakhir (opsional)
    */
   constructor(data) {
+    if (!data.crmChannelId) {
+      throw new Error("crmChannelId is required");
+    }
+    if (typeof data.waChannels !== 'object' || data.waChannels === null) {
+      throw new Error("waChannels must be an object");
+    }
+
     this.id = data.id || null;
     this.crmChannelId = data.crmChannelId;
     this.waChannels = data.waChannels || {}; // Object/Map dengan wabaId sebagai key
     this.name = data.name || null;
-    this.isActive = data.isActive || true;
+    this.isActive = typeof data.isActive === 'boolean' ? data.isActive : true;
     this.createdAt = data.createdAt || Date.now();
     this.updatedAt = data.updatedAt || Date.now();
   }
@@ -84,6 +91,22 @@ class Channel {
       created_at: this.createdAt,
       updated_at: this.updatedAt
     };
+  }
+
+  static fromFirestore(doc) {
+    if (!doc.exists) return null;
+  
+    const data = doc.data();
+  
+    return new Channel({
+      id: doc.id,
+      crmChannelId: data.crm_channel_id,
+      waChannels: data.wa_channels,
+      name: data.name,
+      isActive: data.is_active,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
+    });
   }
 }
 
