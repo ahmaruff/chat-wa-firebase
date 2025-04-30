@@ -53,6 +53,7 @@ class ProcessWhatsappWebhook {
     
     if (mode && token) {
       if (mode === 'subscribe' && token === verifyToken) {
+        console.log('SUCES VERIFY WHATSAPP TOKEN');
         return { success: true, challenge };
       } else {
         throw new Error('Verification failed: token mismatch');
