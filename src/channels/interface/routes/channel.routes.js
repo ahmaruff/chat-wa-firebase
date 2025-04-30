@@ -111,7 +111,7 @@ router.get('/:id', (req, res) => channelController.getChannel(req, res));
  *                 example: true
  *               metadata:
  *                 type: object
- *                 example: { region: "Asia", department: "Support" },
+ *                 example: { region: "Asia", department: "Support" }
  *               participants:
  *                 type: array
  *                 example: ["1", "2"]
