@@ -30,7 +30,9 @@ class FirestoreChannelRepository {
         // Update existing document
         docRef = this.collection.doc(channel.id);
         await docRef.update(data);
-        return new Channel({ ...data, id: docRef.id });
+        
+        const channel = Channel.fromFirestore(doc);
+        return channel;
       } else {
         // Create new document
         docRef = this.collection.doc(); // generate ID dulu
@@ -56,7 +58,9 @@ class FirestoreChannelRepository {
       if (!doc.exists) {
         return null;
       }
-      return new Channel({ id: doc.id, ...doc.data() });
+
+      const channel = Channel.fromFirestore(doc);
+      return channel;
     } catch (error) {
       console.error('Error getting Channel by ID:', error);
       throw error;
@@ -80,7 +84,8 @@ class FirestoreChannelRepository {
       }
 
       const doc = snapshot.docs[0];
-      return new Channel({ id: doc.id, ...doc.data() });
+      const channel = Channel.fromFirestore(doc);
+      return channel;
     } catch (error) {
       console.error('Error getting Channel by CRM Channel ID:', error);
       throw error;
@@ -94,7 +99,7 @@ class FirestoreChannelRepository {
   async getAll() {
     try {
       const snapshot = await this.collection.get();
-      return snapshot.docs.map(doc => new Channel({ id: doc.id, ...doc.data() }));
+      return snapshot.docs.map(doc => Channel.fromFirestore(doc));
     } catch (error) {
       console.error('Error getting all Channels:', error);
       throw error;
@@ -111,7 +116,7 @@ class FirestoreChannelRepository {
         .where('isActive', '==', true)
         .get();
 
-      return snapshot.docs.map(doc => new Channel({ id: doc.id, ...doc.data() }));
+      return snapshot.docs.map(doc => Channel.fromFirestore(doc));
     } catch (error) {
       console.error('Error getting active Channels:', error);
       throw error;
