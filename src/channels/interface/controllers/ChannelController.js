@@ -45,7 +45,7 @@ class ChannelController {
 
   async addWhatsAppChannel(req, res) {
     try {
-      const {channelId, waBusinessId, phoneNumberId, name = 'Unknown', displayPhoneNumber, accessToken = null, isActive = true, metadata = {} } = req.body;
+      const {channelId, waBusinessId, phoneNumberId, name = 'Unknown', displayPhoneNumber, accessToken = null, isActive = true, metadata = {}, participants = [] } = req.body;
 
       const result = await this.channelService.addWhatsAppChannel({
         channelId: channelId,
@@ -55,7 +55,8 @@ class ChannelController {
         displayPhoneNumber: displayPhoneNumber || phoneNumberId,
         accessToken: accessToken || null,
         isActive: isActive || true,
-        metadata: metadata || {}
+        metadata: metadata || {},
+        participants: participants || []
       });
 
       return res.status(200).json(responseFormatter(STATUS.SUCCESS, 200, 'Whatsapp Channel Added', {

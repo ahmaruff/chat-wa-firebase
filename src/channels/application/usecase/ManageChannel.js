@@ -76,7 +76,8 @@ class ManageChannel {
         accessToken: waChannelData.accessToken,
         name: waChannelData.name,
         isActive: waChannelData.isActive || true,
-        metadata: waChannelData.metadata
+        metadata: waChannelData.metadata,
+        participants: waChannelData.participants || [],
       });
 
       if (!whatsappChannel.isValid()) {
