@@ -24,14 +24,7 @@ class FirestoreChatRepository extends ChatRepository {
       return null;
     }
         
-    return new Chat({
-      id: doc.id,
-      sender: data.sender,
-      thread: data.thread,
-      createdAt: data.created_at,
-      messageContent: new MessageContent(data.message),
-      unread: data.unread
-    });
+    return Chat.fromFirestore(doc);
   }
 
   async getById(id) {

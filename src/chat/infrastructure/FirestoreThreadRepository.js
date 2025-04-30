@@ -18,18 +18,7 @@ class FirestoreThreadRepository extends ThreadRepository {
     
     const data = doc.data();
 
-    return new Thread({
-      id: doc.id,
-      waBusinessId: data.wa_business_id,
-      contactName: data.contact_name,
-      contactWaId: data.contact_wa_id,
-      displayPhoneNumber: data.display_phone_number,
-      startTime: data.start_time,
-      endTime: data.end_time,
-      lastMessage: data.last_message,
-      lastUpdated: data.last_updated,
-      status: data.status
-    });
+    return Thread.fromFirestore(doc);
   }
 
   async save(thread) {
