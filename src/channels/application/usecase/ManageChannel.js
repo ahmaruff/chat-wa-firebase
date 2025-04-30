@@ -70,22 +70,14 @@ class ManageChannel {
       }
 
       // Buat WhatsApp channel baru
-      const whatsappChannel = new WhatsappChannel({
-        phoneNumberId: waChannelData.phoneNumberId,
-        displayPhoneNumber: waChannelData.displayPhoneNumber,
-        accessToken: waChannelData.accessToken,
-        name: waChannelData.name,
-        isActive: waChannelData.isActive || true,
-        metadata: waChannelData.metadata,
-        participants: waChannelData.participants || [],
-      });
+      const whatsappChannel = WhatsappChannel.fromJson(waChannelData);
 
       if (!whatsappChannel.isValid()) {
         throw new Error('Invalid WhatsApp channel data');
       }
 
       // Tambahkan ke Channel
-      channel.waChannels[wabaId] = whatsappChannel.toJSON();
+      channel.waChannels[wabaId] = whatsappChannel;
       channel.updatedAt = Date.now();
 
       // Simpan perubahan
