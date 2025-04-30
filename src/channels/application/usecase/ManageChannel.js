@@ -186,6 +186,35 @@ class ManageChannel {
     }
   }
 
+  async findByParticipantsId(channelId, participantId) {
+    try {
+      const channel = await this.channelRepository.getById(channelId);
+      if(!channel) {
+        return null;
+      }
+
+      const matchingWaChannels = {};
+
+      for (const [wabaId, waChannel] of Object.entries(channel.waChannels)) {
+        if (waChannel.participants.includes(participantId)) {
+          matchingWaChannels[wabaId] = waChannel;
+        }
+      }
+  
+      if (Object.keys(matchingWaChannels).length > 0) {
+        return {
+          channel: channel,
+          wa_channels: matchingWaChannels
+        };
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error finding Channel by participants:', error);
+      throw error;
+    }
+  }
+
   async findByCrmChannelId(crmChannelId) {
     try {
       const channel = this.channelRepository.getByCrmChannelId(crmChannelId);

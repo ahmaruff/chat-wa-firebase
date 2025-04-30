@@ -123,6 +123,26 @@ class ChannelController {
       return res.status(404).json(responseFormatter(STATUS.ERROR, 404, `Controller - Find By CRM Channel Id Failed: ${error.message}`,null));
     }
   }
+
+  async findByParticipantId(req, res) {
+    try {
+      const {channelId, participantId} = req.body;
+
+      const result = await this.channelService.findByParticipantId(channelId, participantId);
+
+      if(result) {
+        return res.status(200).json(responseFormatter(STATUS.SUCCESS, 200, 'get channel by participant Id success', {
+          channel: result.channel,
+          wa_channel: result.wa_channels
+        }));
+      }
+
+      return res.status(404).json(responseFormatter(STATUS.FAIL, 404, 'wa channel not found', null));
+    } catch (error) {
+      console.log('Controller - Find By participant id Failed: ', error);
+      return res.status(404).json(responseFormatter(STATUS.ERROR, 404, `Controller - Find By participant id Failed: ${error.message}`,null));
+    }
+  }
 }
 
 module.exports = ChannelController;

@@ -92,6 +92,23 @@ class ChannelService {
     }
   }
 
+  async findByParticipantId(channelId, participantId) {
+    try {
+      const result = this.manageChannel.findByParticipantsId(channelId, participantId);
+
+      if(result) {
+        return {
+          channel: result.channel,
+          wa_channels: result.wa_channels
+        }
+      }
+      return null;
+    } catch (error) {
+      console.log('Find By Participant id failed: ', error);
+      throw error;
+    }
+  }
+
   async getAllChannels(activeOnly = false){
     try {
       const result = await this.manageChannel.getAllChannels(activeOnly);
