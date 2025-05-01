@@ -19,7 +19,7 @@ class ProcessWhatsappWebhook {
         throw new Error('Invalid webhook payload');
       }
 
-      const whatsappMessage = this.handlePayload(payload);
+      const whatsappMessage = await this.handlePayload(payload);
       
       if (!whatsappMessage) {
         return {
