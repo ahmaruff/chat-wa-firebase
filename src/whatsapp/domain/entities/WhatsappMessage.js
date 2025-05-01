@@ -20,6 +20,7 @@ class WhatsappMessage {
     // Additional fields
     this.status = data.status || 'received';
     this.createdAt = data.createdAt || Date.now();
+    this.endTime = data.endTime || null;
   }
 
   toJSON() {
@@ -35,7 +36,8 @@ class WhatsappMessage {
       contact_name: this.contactName,
       contact_wa_id: this.contactWaId,
       status: this.status,
-      created_at: this.createdAt
+      created_at: this.createdAt,
+      end_time: this.endTime
     };
   }
 
@@ -92,7 +94,7 @@ class WhatsappMessage {
         contactName: contact && contact.profile ? contact.profile.name : null,
         contactWaId: contact ? contact.wa_id : null,
         status: 'received',
-        createdAt: Date.now()
+        createdAt: Date.now(),
       });
     } catch (error) {
       console.error('Error parsing WhatsApp payload:', error);
@@ -106,18 +108,20 @@ class WhatsappMessage {
    */
   toChatServiceFormat() {
     return {
-      chatId: this.id,
-      senderNumber: this.from,
-      recipientNumber: this.displayPhoneNumber,
+      chatId: this.chatId,
+      senderNumber: this.senderNumber,
+      recipientNumber: this.recipientNumber,
       contactName: this.contactName,
-      messageText: this.body,
-      waBusinessId: this.waBusinessAccountId,
+      messageText: this.messageText,
+      waBusinessId: this.waBusinessId,
       status: this.status,
-      unread: true,
+      unread: this.unread,
       displayPhoneNumber: this.displayPhoneNumber,
       createdAt: this.createdAt,
-      replyTo: null,
-      repliedBy: null,
+      replyTo: this.replyTo,
+      repliedBy: this.repliedBy,
+      contactWaId: this.contactWaId,
+      endTime: this.endTime
     }
   }
 }

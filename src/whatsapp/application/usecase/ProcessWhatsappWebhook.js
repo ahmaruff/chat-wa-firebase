@@ -127,10 +127,10 @@ class ProcessWhatsappWebhook {
         waBusinessAccountId: waChannelResult.whatsAppBusinessId,
         phoneNumberId: waChannel.phoneNumberId,
         displayPhoneNumber: metadata.display_phone_number,
-        contactName: contact && contact.profile ? contact.profile.name : null,
+        contactName: contact && contact.profile ? contact.profile.name : 'Unknown',
         contactWaId: contact ? contact.wa_id : null,
         status: 'received',
-        createdAt: Date.now()
+        createdAt: Date.now(),
       });
 
       return wa;
