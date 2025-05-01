@@ -1,9 +1,10 @@
 const WhatsappMessage = require('../../domain/entities/WhatsappMessage');
 const config = require('../../../shared/utils/configs');
-
+const ChannelServiceAdapter = require('../../services/ChannelServiceAdapter');
 class ProcessWhatsappWebhook {
   constructor(chatServiceAdapter) {
     this.chatServiceAdapter = chatServiceAdapter;
+    this.channelServiceAdapter = new ChannelServiceAdapter();
   }
 
   /**
@@ -18,11 +19,13 @@ class ProcessWhatsappWebhook {
         throw new Error('Invalid webhook payload');
       }
 
-      const whatsappMessage = WhatsappMessage.fromWhatsAppPayload(payload);
+      const whatsappMessage = this.handlePayload(payload);
       
       if (!whatsappMessage) {
-        console.log('Could not parse WhatsApp message from payload:', payload);
-        throw new Error('Could not parse WhatsApp message from payload');
+        return {
+          success: false,
+          payload: payload,
+        }
       }
 
       console.log(`Received WhatsApp message: ${whatsappMessage.body} from ${whatsappMessage.from}`);
@@ -61,6 +64,71 @@ class ProcessWhatsappWebhook {
     }
     
     throw new Error('Missing parameters for webhook verification');
+  }
+
+  async handlePayload(payload){
+    try {
+      if (!payload || !payload.object || !payload.entry || !payload.entry.length) {
+        console.error('Invalid WhatsApp payload structure');
+        return null;
+      }
+
+      const entry = payload.entry[0];
+      const change = entry.changes[0];
+      
+      if (!change || !change.value || !change.value.messages || !change.value.messages.length) {
+        console.error('No messages in WhatsApp payload');
+        return null;
+      }
+
+      const metadata = change.value.metadata;
+      const message = change.value.messages[0];
+      const contact = change.value.contacts && change.value.contacts.length ? 
+                      change.value.contacts[0] : null;
+
+      // Extract message body based on message type
+      let body = null;
+      if (message.type === 'text' && message.text) {
+        body = message.text.body;
+      } else if (message.type === 'image' && message.image) {
+        body = message.image.caption || 'Image received';
+      } else if (message.type === 'document' && message.document) {
+        body = message.document.caption || 'Document received';
+      } else if (message.type === 'audio' && message.audio) {
+        body = 'Audio received';
+      } else if (message.type === 'video' && message.video) {
+        body = message.video.caption || 'Video received';
+      } else {
+        body = `Message of type ${message.type} received`;
+      }
+
+      const waChannelResult = await this.channelServiceAdapter.getWhatsappChannel(entry.id);
+
+      if(!waChannelResult) {
+        console.warn(`Unknown WABA ID: ${entry.id} — ignoring message`);
+        return null;
+      }
+
+      const waChannel = waChannelResult.whatsappChannel;
+
+      return new WhatsappMessage({
+        id: message.id,
+        from: message.from,
+        timestamp: parseInt(message.timestamp) * 1000,
+        type: message.type,
+        body: body,
+        waBusinessAccountId: waChannelResult.whatsAppBusinessId,
+        phoneNumberId: waChannel.phoneNumberId,
+        displayPhoneNumber: metadata.display_phone_number,
+        contactName: contact && contact.profile ? contact.profile.name : null,
+        contactWaId: contact ? contact.wa_id : null,
+        status: 'received',
+        createdAt: Date.now()
+      });
+    } catch (error) {
+      console.error('Error parsing WhatsApp payload:', error);
+      return null;
+    }
   }
 }
 

@@ -29,6 +29,11 @@ class WhatsappController {
 
       // Proses payload webhook
       const result = await this.processWhatsappWebhook.execute(payload);
+
+      if(!result.success) {
+        // always return 200 OK to avoid whatsapp attempted to send it again;
+        res.status(200).json(responseFormatter(STATUS.SUCCESS, 200, 'Webhook received but failed to process, success: false'));
+      }
       
       const resp = {
         from: result.from,

@@ -1,3 +1,4 @@
+
 class WhatsappMessage {
   constructor(data) {
     // Core message properties
