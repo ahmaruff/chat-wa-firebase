@@ -29,7 +29,7 @@ class SaveChatWithThread {
   }) {
     let isNewThread = false;
     let originalThread = null;
-    let thread = await this.threadRepository.getByWhatsappInfo(waBusinessId, recipientNumber);
+    let thread = await this.threadRepository.getByWhatsappInfo(waBusinessId, contactWaId);
 
     if (!thread) {
       isNewThread = true;
