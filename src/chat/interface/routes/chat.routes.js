@@ -51,8 +51,8 @@ const chatController = new ChatController(firestoreThreadRepository, firestoreCh
  *                 description: contact WA id
  *               status:
  *                 type: integer
- *                 description: |0|1|2
- *                endTime:
+ *                 description: int
+ *               endTime:
  *                  type: integer
  *                  description: timestamp epoch
  *             required:
@@ -71,7 +71,7 @@ const chatController = new ChatController(firestoreThreadRepository, firestoreCh
  *                   type: string
  *                   example: success
  *                 code:
- *                   type: integer
+ *                   type: integ'er
  *                   example: 200
  *                 message:
  *                   type: string

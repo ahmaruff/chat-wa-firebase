@@ -14,6 +14,7 @@ const responseFormatter = require('../../../shared/utils/responseFormatter');
 const config = require('../../../shared/utils/configs');
 const Thread = require('../../domain/entities/Thread');
 const ChannelServiceAdapter = require('../../service/ChannelServiceAdapter');
+const WhatsAppServiceAdapter = require('../../service/WhatsAppServiceAdapter');
 
 class ChatController {
   constructor(threadRepository, chatRepository) {
@@ -25,6 +26,7 @@ class ChatController {
     this.saveThread = new SaveThread(threadRepository);
     this.saveChatWithThread = new SaveChatWithThread(threadRepository, chatRepository);
     this.channelServiceAdapter = new ChannelServiceAdapter();
+    this.whatsAppServiceAdapter = new WhatsAppServiceAdapter(); 
   }
 
   async save(req, res) {
@@ -42,6 +44,20 @@ class ChatController {
     const senderNumber = waChannel.displayPhoneNumber;
 
     try {
+      const waApiRes = await this.whatsAppServiceAdapter.sendToWhatsapApi({
+        waBusinessId: wabaId,
+        recipientNumber: recipientNumber,
+        messageText: messageText,
+      });
+      // const waApiRes = await  this.sendMessage.send({
+      //   waBusinessId: whatsappMessage.waBusinessAccountId,
+      //   recipientNumber: whatsappMessage.phoneNumberId,
+      //   messageText: whatsappMessage.body
+      // });
+
+      console.log('wa response: ', waApiRes);
+      
+      
       const result = await this.saveChatWithThread.execute({
         id: null,
         chatId: chatId,

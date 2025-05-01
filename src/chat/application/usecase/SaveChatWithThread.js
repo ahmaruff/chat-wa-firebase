@@ -51,7 +51,6 @@ class SaveChatWithThread {
       const t = await this.threadRepository.save(thread);
       thread = t;
 
-      console.log('save thread: ', thread);
     } else {
       const updateThread = new Thread({
         id: thread.id,
