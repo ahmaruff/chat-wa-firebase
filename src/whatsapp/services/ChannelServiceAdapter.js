@@ -45,8 +45,7 @@ class ChannelServiceAdapter{
 
   async getWhatsappChannel(wabaId) {
     try {
-
-      const result = await this.channelService.findByPhoneNumber(wabaId);
+      const result = await this.channelService.findByWabaId(wabaId);
       
       if(!result) {
         return null;
@@ -73,3 +72,5 @@ class ChannelServiceAdapter{
     }
   }
 }
+
+module.exports = ChannelServiceAdapter;
