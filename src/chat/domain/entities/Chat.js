@@ -29,7 +29,8 @@ class Chat {
       created_at: this.createdAt,
       chat_id: this.chatId,
       reply_to: this.replyTo,
-      replied_by: this.repliedBy
+      replied_by: this.repliedBy,
+      unread: this.unread,
     }
   }
 
@@ -39,11 +40,11 @@ class Chat {
       sender: data.sender,
       thread: data.thread,
       messageContent: new MessageContent(data.message),
-      unread: data.unread,
       chatId: data.chat_id,
       replyTo: data.reply_to,
       repliedBy: data.replied_by,
-      createdAt: data.created_at
+      createdAt: data.created_at,
+      unread: data.unread,
     });
   }
 
