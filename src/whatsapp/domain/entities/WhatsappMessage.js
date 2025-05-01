@@ -108,6 +108,7 @@ class WhatsappMessage {
    */
   toChatServiceFormat() {
     return {
+      id: this.id,
       chatId: this.chatId,
       senderNumber: this.from,
       recipientNumber: this.displayPhoneNumber,
