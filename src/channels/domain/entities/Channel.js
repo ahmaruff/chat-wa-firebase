@@ -103,10 +103,11 @@ class Channel {
     const wa_channels = {};
 
     for (const [wabaId, waChannel] of Object.entries(this.waChannels)) {
-      if (waChannel instanceof WhatsappChannel) {
+      if (waChannel && typeof waChannel.toJSON === 'function') {
+        // Either an instance or plain object that still has toJSON()
         wa_channels[wabaId] = waChannel.toJSON();
       } else if (Object.getPrototypeOf(waChannel) === Object.prototype) {
-        // Plain object
+        // Plain object (no class methods)
         wa_channels[wabaId] = waChannel;
       } else {
         console.warn(`Unexpected type for waChannel under WABA ID ${wabaId}`);
