@@ -77,8 +77,8 @@ class FirestoreChatRepository extends ChatRepository {
         unread: chat.unread ?? true,
         created_at: existing ? existing.created_at : timestamp,
         chat_id: chat.chatId,
-        replyTo: chat.replyTo || null,
-        repliedBy: chat.repliedBy || null,
+        reply_to: chat.replyTo || null,
+        replied_by: chat.repliedBy || null,
       };
   
       await chatDocRef.set(chatData, { merge: true });
