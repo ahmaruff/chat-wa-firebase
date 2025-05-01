@@ -112,7 +112,7 @@ class WhatsappMessage {
       senderNumber: this.senderNumber,
       recipientNumber: this.recipientNumber,
       contactName: this.contactName,
-      messageText: this.messageText,
+      messageText: this.body,
       waBusinessId: this.waBusinessId,
       status: this.status,
       unread: this.unread,
