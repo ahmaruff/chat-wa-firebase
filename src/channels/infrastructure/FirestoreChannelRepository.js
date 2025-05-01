@@ -22,7 +22,6 @@ class FirestoreChannelRepository {
 
     try {
       const data = channel.toJSON();
-      
       data.updatedAt = Date.now();
 
       let docRef;
@@ -31,15 +30,17 @@ class FirestoreChannelRepository {
         docRef = this.collection.doc(channel.id);
         await docRef.update(data);
         
-        const c = Channel.fromFirestore(docRef);
-        return c;
+        const updatedDoc = await docRef.get();
+        return Channel.fromFirestore(updatedDoc);
       } else {
         // Create new document
         docRef = this.collection.doc(); // generate ID dulu
         data.id = docRef.id;  
         data.createdAt = Date.now();
         await docRef.set(data);
-        return Channel.fromFirestore(docRef);
+
+        const snapshot = await docRef.get();
+        return Channel.fromFirestore(snapshot);
       }
     } catch (error) {
       console.error('Error saving Channel:', error);
