@@ -43,6 +43,20 @@ class ChannelServiceAdapter{
     }
   }
 
+  async getWhatsappChannelByPhoneNumberId(id) {
+    try {
+      const result = await this.channelService.findByPhoneNumber(id);
+      if(!result) {
+        return null;
+      }
+
+      return result;
+    } catch (error) {
+      console.log('WA Adapter: Error Get Whatsapp Channel y phone number id: ', error);
+      throw error;
+    }
+  }
+
   async getWhatsappChannel(wabaId) {
     try {
       const result = await this.channelService.findByWabaId(wabaId);

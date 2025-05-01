@@ -109,7 +109,7 @@ class ProcessWhatsappWebhook {
         body = `Message of type ${message.type} received`;
       }
 
-      const waChannelResult = await this.channelServiceAdapter.getWhatsappChannel(entry.id);
+      const waChannelResult = await this.channelServiceAdapter.getWhatsappChannelByPhoneNumberId(metadata.phone_number_id);
 
       if(!waChannelResult) {
         console.warn(`Unknown WABA ID: ${entry.id} — ignoring message`);
