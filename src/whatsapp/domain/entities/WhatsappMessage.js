@@ -109,11 +109,11 @@ class WhatsappMessage {
   toChatServiceFormat() {
     return {
       chatId: this.chatId,
-      senderNumber: this.senderNumber,
-      recipientNumber: this.recipientNumber,
+      senderNumber: this.from,
+      recipientNumber: this.displayPhoneNumber,
       contactName: this.contactName,
       messageText: this.body,
-      waBusinessId: this.waBusinessId,
+      waBusinessId: this.waBusinessAccountId,
       status: this.status,
       unread: this.unread,
       displayPhoneNumber: this.displayPhoneNumber,

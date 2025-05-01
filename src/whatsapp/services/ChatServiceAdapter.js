@@ -21,6 +21,7 @@ class ChatServiceAdapter {
       
       // Panggil Chat service untuk menyimpan pesan
       const result = await this.chatService.createChatFromExternalSource({
+        id : waData.id || null,
         chatId: waData.chatId,
         senderNumber: waData.senderNumber,
         recipientNumber: waData.recipientNumber,
