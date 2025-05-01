@@ -1,18 +1,18 @@
 class Thread {
   constructor({id, contactName, contactWaId, displayPhoneNumber, startTime = null, endTime = null, lastMessage, status, waBusinessId, lastUpdated = null}) {
-    if (!contactName) throw new Error('Thread must have a contact name');
+    // if (!contactName) throw new Error('Thread must have a contact name');
     if (!displayPhoneNumber) throw new Error('Thread must have a display phone number');
     // if (!startTime) throw new Error('Thread must have a start time');
     // if (!endTime) throw new Error('Thread must have an end time');
-    if (!lastMessage) throw new Error('Thread must have a last message');
+    // if (!lastMessage) throw new Error('Thread must have a last message');
 
     this.id = id || null;
-    this.contactName = contactName;
+    this.contactName = contactName || 'Unknown';
     this.contactWaId = contactWaId || null;
     this.displayPhoneNumber = displayPhoneNumber;
     this.startTime = startTime || null;
     this.endTime = endTime || null;
-    this.lastMessage = lastMessage;
+    this.lastMessage = lastMessage || null;
     this.status = status;
     this.waBusinessId = waBusinessId || null;
     this.lastUpdated = lastUpdated || null;
