@@ -158,7 +158,7 @@ class ManageChannel {
       
       // Iterasi melalui semua Channel
       for (const channel of allChannels) {
-        const whatsappChannel = channel.findByWabaId(wabaId);
+        const whatsappChannel = channel.getWhatsAppChannel(wabaId);
         if (whatsappChannel) {
           return {
             whatsAppBusinessId: wabaId,

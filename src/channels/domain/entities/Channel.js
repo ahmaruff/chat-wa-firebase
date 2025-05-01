@@ -96,16 +96,20 @@ class Channel {
     return activeChannels;
   }
   /**
-   * Convert Meta Channel ke JSON untuk penyimpanan
+   * Convert Channel ke JSON untuk penyimpanan
    * @returns {Object} - Representasi JSON dari Meta Channel
    */
   toJSON() {
     const wa_channels = {};
-    for (const [wabaId, channel] of Object.entries(this.waChannels)) {
-      if (channel instanceof WhatsappChannel) {
-        wa_channels[wabaId] = channel.toJSON();
+
+    for (const [wabaId, waChannel] of Object.entries(this.waChannels)) {
+      if (waChannel instanceof WhatsappChannel) {
+        wa_channels[wabaId] = waChannel.toJSON();
+      } else if (Object.getPrototypeOf(waChannel) === Object.prototype) {
+        // Plain object
+        wa_channels[wabaId] = waChannel;
       } else {
-        wa_channels[wabaId] = channel;
+        console.warn(`Unexpected type for waChannel under WABA ID ${wabaId}`);
       }
     }
     
