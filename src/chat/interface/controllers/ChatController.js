@@ -28,9 +28,9 @@ class ChatController {
   }
 
   async save(req, res) {
-    const { waBusinessId, recipientNumber, messageText, contactName, repliedBy, replyTo } = req.body;
+    const { waBusinessId, recipientNumber, messageText, contactName, repliedBy, replyTo, chatId = null, contactWaId = null, status = null, endTime } = req.body;
 
-    const waChannelResult = this.channelServiceAdapter.getWhatsappChannel(waBusinessId);
+    const waChannelResult = await this.channelServiceAdapter.getWhatsappChannel(waBusinessId);
 
     if(!waChannelResult) {
       console.warn(`Unknown WABA ID: ${waBusinessId} — ignoring message`);
@@ -44,7 +44,7 @@ class ChatController {
     try {
       const result = await this.saveChatWithThread.execute({
         id: null,
-        chatId: null,
+        chatId: chatId,
         repliedBy: repliedBy || null,
         replyTo: replyTo || null,
         waBusinessId: wabaId,
@@ -53,7 +53,11 @@ class ChatController {
         messageText: messageText,
         contactName: contactName || 'Unknown',
         sender: senderNumber,
-        unread: true
+        unread: true,
+        contactWaId: contactWaId,
+        createdAt: Date.now(),
+        status: status,
+        endTime: endTime || null
       });
       
       res.status(200).json(

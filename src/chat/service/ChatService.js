@@ -28,6 +28,8 @@ class ChatService extends ChatServiceInterface {
         repliedBy: repliedBy
       });
 
+      console.log('chat ext:', result);
+
       return result;
     } catch (error) {
       console.log('Error create chat from external source: ', error);

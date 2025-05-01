@@ -16,6 +16,7 @@ class SaveChatWithThread {
     sender,
     recipientNumber,
     contactName,
+    contactWaId,
     messageText,
     waBusinessId,
     status = THREAD_STATUS.QUEUE,
@@ -23,7 +24,8 @@ class SaveChatWithThread {
     displayPhoneNumber,
     createdAt = Date.now(),
     replyTo,
-    repliedBy
+    repliedBy,
+    endTime = null
   }) {
     let isNewThread = false;
     let originalThread = null;
@@ -36,17 +38,37 @@ class SaveChatWithThread {
         id: null,
         waBusinessId: waBusinessId,
         contactName: contactName,
-        contactWaId: recipientNumber,
+        contactWaId: contactWaId,
         displayPhoneNumber: displayPhoneNumber,
-        startTime: null,
+        startTime: Date.now(),
         endTime: null,
         lastMessage: messageText,
-        lastUpdated: null,
-        status: status
+        lastUpdated: Date.now(),
+        status: status,
+        endTime: endTime || null
       });
 
-      thread = await this.threadRepository.save(thread);
+      const t = await this.threadRepository.save(thread);
+      thread = t;
+
+      console.log('save thread: ', thread);
     } else {
+      const updateThread = new Thread({
+        id: thread.id,
+        contactName: contactName || thread.contactName,
+        contactWaId: contactWaId || thread.contactWaId,
+        displayPhoneNumber: displayPhoneNumber || thread.displayPhoneNumber,
+        startTime: startTime || thread.startTime,
+        lastMessage: lastMessage || thread.lastMessage,
+        lastUpdated: Date.now(),
+        status: status || thread.status,
+        waBusinessId: waBusinessId || thread.waBusinessId,
+        endTime: endTime || null
+      });
+
+      const t = await this.threadRepository.save(updateThread);
+      thread = t;
+
       originalThread = thread.toPrimitive();
     }
 

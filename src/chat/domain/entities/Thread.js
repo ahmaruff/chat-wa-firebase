@@ -5,7 +5,6 @@ class Thread {
     // if (!startTime) throw new Error('Thread must have a start time');
     // if (!endTime) throw new Error('Thread must have an end time');
     if (!lastMessage) throw new Error('Thread must have a last message');
-    if (!status) throw new Error('Thread must have a status');
 
     this.id = id || null;
     this.contactName = contactName;

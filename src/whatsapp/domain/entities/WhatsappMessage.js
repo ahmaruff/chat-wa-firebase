@@ -106,15 +106,19 @@ class WhatsappMessage {
    */
   toChatServiceFormat() {
     return {
-      waBusinessId: this.waBusinessAccountId,
-      phoneNumberId: this.phoneNumberId,
-      recipientNumber: this.displayPhoneNumber,
-      messageText: this.body,
-      contactName: this.contactName || 'Unknown',
+      chatId: this.id,
       senderNumber: this.from,
+      recipientNumber: this.displayPhoneNumber,
+      contactName: this.contactName,
+      messageText: this.body,
+      waBusinessId: this.waBusinessAccountId,
+      status: this.status,
+      unread: true,
       displayPhoneNumber: this.displayPhoneNumber,
-      status: this.status
-    };
+      createdAt: this.createdAt,
+      replyTo: null,
+      repliedBy: null,
+    }
   }
 }
 
