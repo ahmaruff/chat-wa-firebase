@@ -11,7 +11,7 @@ class ChatService extends ChatServiceInterface {
     this.saveChatWithThread = new SaveChatWithThread(this.threadRepository, this.chatRepository);
   }
 
-  async createChatFromExternalSource({ id, chatId, senderNumber,  recipientNumber, contactName, messageText, waBusinessId, status, unread, displayPhoneNumber, createdAt, replyTo, repliedBy, contactWaId, endTime }) {
+  async createChatFromExternalSource({ id, chatId, senderNumber,  recipientNumber, contactName, messageText, waBusinessId, status, unread, displayPhoneNumber, createdAt, replyTo, repliedBy, contactWaId, endTime, startTime }) {
     try {
       const result = await this.saveChatWithThread.execute({
         chatId: chatId,
@@ -29,6 +29,7 @@ class ChatService extends ChatServiceInterface {
         contactWaId: contactWaId,
         id: id || null,
         endTime: endTime || null,
+        startTime: startTime
       });
 
       console.log('chat ext:', result);

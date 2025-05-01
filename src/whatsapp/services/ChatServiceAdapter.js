@@ -35,7 +35,8 @@ class ChatServiceAdapter {
         replyTo: waData.replyTo,
         repliedBy: waData.repliedBy,
         contactWaId: waData.contactWaId,
-        endTime: waData.endTime
+        endTime: waData.endTime,
+        startTime: waData.startTime,
       });
       console.log('result save chat:', result);
       return result;

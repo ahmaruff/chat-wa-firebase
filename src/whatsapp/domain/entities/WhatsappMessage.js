@@ -21,6 +21,7 @@ class WhatsappMessage {
     this.status = data.status || 'received';
     this.createdAt = data.createdAt || Date.now();
     this.endTime = data.endTime || null;
+    this.startTime = data.startTime || null;
   }
 
   toJSON() {
@@ -37,7 +38,8 @@ class WhatsappMessage {
       contact_wa_id: this.contactWaId,
       status: this.status,
       created_at: this.createdAt,
-      end_time: this.endTime
+      end_time: this.endTime,
+      start_time: this.startTime,
     };
   }
 
@@ -95,6 +97,7 @@ class WhatsappMessage {
         contactWaId: contact ? contact.wa_id : null,
         status: 'received',
         createdAt: Date.now(),
+        startTime: null,
       });
     } catch (error) {
       console.error('Error parsing WhatsApp payload:', error);
@@ -122,7 +125,8 @@ class WhatsappMessage {
       replyTo: this.replyTo,
       repliedBy: this.repliedBy,
       contactWaId: this.contactWaId,
-      endTime: this.endTime
+      endTime: this.endTime,
+      startTime: this.startTime,
     }
   }
 }

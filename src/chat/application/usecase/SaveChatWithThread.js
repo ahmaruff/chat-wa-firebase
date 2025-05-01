@@ -25,7 +25,8 @@ class SaveChatWithThread {
     createdAt = Date.now(),
     replyTo,
     repliedBy,
-    endTime = null
+    endTime = null,
+    startTime,
   }) {
     let isNewThread = false;
     let originalThread = null;
