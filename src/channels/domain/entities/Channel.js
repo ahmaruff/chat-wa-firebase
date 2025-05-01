@@ -38,6 +38,10 @@ class Channel {
     return Boolean(this.waChannels[wabaId]);
   }
 
+  getWhatsAppChannelByWabaId(wabaId) {
+    return this.waChannels[wabaId] || null;
+  }
+
   /**
    * Mendapatkan WhatsApp channel berdasarkan wabaId
    * @param {string} wabaId - WhatsApp Business Account ID

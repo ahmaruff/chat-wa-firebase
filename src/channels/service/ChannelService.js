@@ -76,6 +76,24 @@ class ChannelService {
     }
   }
 
+  async findByWabaId(wabaId) {
+    try {
+      const result = await this.manageChannel.findByWabaId(wabaId);
+
+      if(result) {
+        return {
+          whatsAppBusinessId: result.whatsAppBusinessId,
+          channel: result.channel,
+          whatsappChannel: result.whatsappChannel
+        }
+      }
+      return null;
+    } catch (error) {
+      console.log('Find By Phone WABA ID failed: ', error);
+      throw error;
+    }
+  }
+
   async findByPhoneNumber(phoneNumberId) {
     try {
       const result = await this.manageChannel.findByPhoneNumberId(phoneNumberId);

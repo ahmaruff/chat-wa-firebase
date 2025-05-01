@@ -147,6 +147,34 @@ class ManageChannel {
     }
   }
 
+  async findByWabaId(wabaId) {
+    try {
+      if (!wabaId) {
+        throw new Error('wabaId is required');
+      }
+
+      // Dapatkan semua Channel
+      const allChannels = await this.channelRepository.getAll();
+      
+      // Iterasi melalui semua Channel
+      for (const channel of allChannels) {
+        const whatsappChannel = channel.findByWabaId(wabaId);
+        if (whatsappChannel) {
+          return {
+            whatsAppBusinessId: wabaId,
+            channel: channel,
+            whatsappChannel: whatsappChannel
+          };
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error finding Channel by phoneNumberId:', error);
+      throw error;
+    }
+  }
+
   /**
    * Mencari Channel yang memiliki WhatsApp channel dengan phoneNumberId tertentu
    * @param {string} phoneNumberId - Phone Number ID WhatsApp
