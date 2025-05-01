@@ -11,12 +11,15 @@ class ChatServiceAdapter {
    * @returns {Promise<Object>} - Hasil pembuatan chat
    */
   async createChatFromWhatsApp(whatsappMessage) {
-    try {
-      // Gunakan metode toChatServiceFormat dari entity WhatsappMessage
-      const chatData = whatsappMessage.toChatServiceFormat();
+    if(!whatsappMessage || whatsappMessage == null) {
+      throw new Error("whatsapp Message null, require instance of WhatsappMessage"); 
+    }
+    
+    try {      
+      const waData = whatsappMessage.toChatServiceFormat();
       
       // Panggil Chat service untuk menyimpan pesan
-      const result = await this.chatService.createChatFromExternalSource(chatData);
+      const result = await this.chatService.createChatFromExternalSource(waData);
       
       return result;
     } catch (error) {

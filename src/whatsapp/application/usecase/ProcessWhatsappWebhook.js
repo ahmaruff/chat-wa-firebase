@@ -28,6 +28,13 @@ class ProcessWhatsappWebhook {
         }
       }
 
+      if(whatsappMessage == null) {
+        return {
+          success: false,
+          payload: payload,
+        }
+      }
+
       console.log(`Received WhatsApp message: ${whatsappMessage.body} from ${whatsappMessage.from}`);
       
       const chatResult = await this.chatServiceAdapter.createChatFromWhatsApp(whatsappMessage);
@@ -111,7 +118,7 @@ class ProcessWhatsappWebhook {
 
       const waChannel = waChannelResult.whatsappChannel;
 
-      return new WhatsappMessage({
+      const wa = new WhatsappMessage({
         id: message.id,
         from: message.from,
         timestamp: parseInt(message.timestamp) * 1000,
@@ -125,6 +132,8 @@ class ProcessWhatsappWebhook {
         status: 'received',
         createdAt: Date.now()
       });
+
+      return wa;
     } catch (error) {
       console.error('Error parsing WhatsApp payload:', error);
       return null;
