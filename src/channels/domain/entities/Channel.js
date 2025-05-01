@@ -61,6 +61,7 @@ class Channel {
       if (channel.phoneNumberId === phoneNumberId) {
 
         const waChannel = new WhatsappChannel({
+          participants: channel.participants || [],
           phoneNumberId: channel.phoneNumberId,
           displayPhoneNumber: channel.displayPhoneNumber,
           accessToken: channel.accessToken,
@@ -68,7 +69,7 @@ class Channel {
           isActive: channel.isActive,
           metadata: channel.metadata,
           name: channel.name,
-          updatedAt: channel.updatedAt
+          updatedAt: channel.updatedAt,
         });
 
         return {
