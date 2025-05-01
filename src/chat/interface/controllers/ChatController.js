@@ -13,6 +13,7 @@ const responseFormatter = require('../../../shared/utils/responseFormatter');
 
 const config = require('../../../shared/utils/configs');
 const Thread = require('../../domain/entities/Thread');
+const ChannelServiceAdapter = require('../../service/ChannelServiceAdapter');
 
 class ChatController {
   constructor(threadRepository, chatRepository) {
@@ -23,23 +24,30 @@ class ChatController {
     this.findThreadById = new FindThreadById(threadRepository);
     this.saveThread = new SaveThread(threadRepository);
     this.saveChatWithThread = new SaveChatWithThread(threadRepository, chatRepository);
+    this.channelServiceAdapter = new ChannelServiceAdapter();
   }
 
   async save(req, res) {
-    const waConfig = config.wa_config;
-    const senderNumber = waConfig.display_phone_number;
+    const { waBusinessId, recipientNumber, messageText, contactName, repliedBy, replyTo } = req.body;
 
-    if(!senderNumber) {
-      throw new Error("Whatsapp config not found");
+    const waChannelResult = this.channelServiceAdapter.getWhatsappChannel(waBusinessId);
+
+    if(!waChannelResult) {
+      console.warn(`Unknown WABA ID: ${waBusinessId} — ignoring message`);
+      return res.status(400).json(responseFormatter(STATUS.FAIL, 400, `Unknown WABA ID: ${waBusinessId} — ignoring message`, null));      
     }
 
-    const { waBusinessId, recipientNumber, messageText, contactName } = req.body;
-    let threadId;
+    const waChannel = waChannelResult.whatsappChannel;
+    const wabaId = waChannelResult.whatsAppBusinessId;
+    const senderNumber = waChannel.displayPhoneNumber;
 
     try {
       const result = await this.saveChatWithThread.execute({
         id: null,
-        waBusinessId: waBusinessId,
+        chatId: null,
+        repliedBy: repliedBy || null,
+        replyTo: replyTo || null,
+        waBusinessId: wabaId,
         recipientNumber: recipientNumber,
         displayPhoneNumber: senderNumber,
         messageText: messageText,
