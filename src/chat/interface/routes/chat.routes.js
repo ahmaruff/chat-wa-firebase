@@ -36,7 +36,13 @@ const chatController = new ChatController(firestoreThreadRepository, firestoreCh
  *                 description: The content of the message to send
  *               contactName:
  *                 type: string
- *                 description: Display name for the contact (optional)
+ *                 description: Display name for the contact (optional),
+ *               replyTo:
+ *                 type: string
+ *                 description: ID previous chat (Optional)
+ *               repliedBy:
+ *                 type: string
+ *                 description: ID user (Optional)
  *             required:
  *               - waBusinessId
  *               - recipientNumber
