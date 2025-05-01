@@ -101,6 +101,10 @@ class FirestoreThreadRepository extends ThreadRepository {
   }
 
   async getByWhatsappInfo(waBusinessId, contactWaId){
+    if (!waBusinessId || !contactWaId) {
+      console.warn('Missing waBusinessId or contactWaId:', { waBusinessId, contactWaId });
+      return null;
+    }
     try {
       const existingThreadQuery = await this.threadCollection
         .where('wa_business_id', '==', waBusinessId)
