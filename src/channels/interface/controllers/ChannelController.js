@@ -65,7 +65,7 @@ class ChannelController {
         channel: c
       }));
     } catch (error) {
-      console.log('Controller - Find By CRM Channel Id Failed: ', error);
+      console.error('Controller - Find By CRM Channel Id Failed: ', error);
       return res.status(404).json(responseFormatter(STATUS.ERROR, 404, `${error.message}`,null));
     }
   }
