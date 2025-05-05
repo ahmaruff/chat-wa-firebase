@@ -30,3 +30,5 @@ class WaConfigRepository{
     throw new Error("Method delete() must be implemented"); 
   }
 }
+
+module.exports = WaConfigRepository;
