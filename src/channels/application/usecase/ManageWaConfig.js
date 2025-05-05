@@ -52,3 +52,5 @@ class ManageWaConfig{
     }
   }
 }
+
+module.exports = ManageWaConfig;
