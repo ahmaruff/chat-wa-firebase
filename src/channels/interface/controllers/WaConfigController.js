@@ -73,7 +73,12 @@ class WaConfigController {
 
   async delete(req, res) {
     try {
-      const { id } = req.body;
+      const id = req.params.id || req.body.id;
+    
+      if (!id) {
+        return res.status(400).json(responseFormatter(STATUS.FAIL, 400, 'ID is required', null));
+      }
+      
       const result = await this.manageWaConfig.delete(id);
 
       if(!result) {

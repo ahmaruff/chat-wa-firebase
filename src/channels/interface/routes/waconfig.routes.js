@@ -326,23 +326,18 @@ router.post('/get-by-channel', (req, res) => waConfigController.getByChannelId(r
 
 /**
  * @swagger
- * /wa-configs:
+ * /wa-configs/{id}:
  *   delete:
  *     summary: Delete a WhatsApp Configuration
  *     tags: [WaConfigs]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - id
- *             properties:
- *               id:
- *                 type: string
- *                 description: ID of the WhatsApp configuration to delete
- *                 example: "waconfig-123"
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: "waconfig-123"
+ *         description: ID of the WhatsApp configuration to delete
  *     responses:
  *       200:
  *         description: WhatsApp Configuration deleted successfully
@@ -399,6 +394,6 @@ router.post('/get-by-channel', (req, res) => waConfigController.getByChannelId(r
  *                 data:
  *                   type: null
  */
-router.delete('/', (req, res) => waConfigController.delete(req, res));
+router.delete('/:id', (req, res) => waConfigController.delete(req, res));
 
 module.exports = router;
