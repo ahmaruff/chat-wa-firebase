@@ -1,11 +1,6 @@
-const SaveChatMessage = require('../../application/usecase/SaveChatMessage');
-const FindThreadByWaInfo = require('../../application/usecase/FindThreadByWaInfo');
-const FindThreadById = require('../../application/usecase/FindThreadById');
-const SaveThread = require('../../application/usecase/SaveThread');
+const ManageThread = require('../../application/usecase/ManageThread');
+const ManageChat = require('../../application/usecase/ManageChat');
 const SaveChatWithThread = require('../../application/usecase/SaveChatWithThread');
-
-const ChatRepository = require('../../domain/repositories/ChatRepository');
-const ThreadRepository = require('../../domain/repositories/ThreadRepository');
 
 const THREAD_STATUS = require('../../../shared/constants/chatStatus');
 const STATUS = require('../../../shared/constants/statusCodes');
@@ -20,13 +15,43 @@ class ChatController {
   constructor(threadRepository, chatRepository) {
     this.threadRepository = threadRepository;
     this.chatRepository = chatRepository;
-    this.saveChatMessage = new SaveChatMessage(chatRepository);
-    this.findThreadByWaInfo = new FindThreadByWaInfo(threadRepository);
-    this.findThreadById = new FindThreadById(threadRepository);
-    this.saveThread = new SaveThread(threadRepository);
+    this.manageChat = new ManageChat(this.chatRepository);
+    this.manageThread = new ManageThread(this.threadRepository);
     this.saveChatWithThread = new SaveChatWithThread(threadRepository, chatRepository);
     this.channelServiceAdapter = new ChannelServiceAdapter();
     this.whatsAppServiceAdapter = new WhatsAppServiceAdapter(); 
+  }
+
+  async saveNew(req, res) {
+    const {
+      wa_business_id,
+      client_wa_id,
+      client_name,
+      client_phone_number_id,
+      client_display_phone_number,
+      unread_count,
+      thread_status,
+      first_response_datetime,
+      last_response_datetime,
+      current_handler_user_id,
+      internal_user_detail,
+      thread_created_at,
+      thread_updated_at,
+      wamid,
+      media_id,
+      media_type,
+      message,
+      reply_to,
+      replied_by,
+    } = req.body;
+
+    const waChannelResult = await this.channelServiceAdapter.getWhatsappChannel(wa_business_id);
+
+    if(!waChannelResult) {
+      console.error(`Unknown WABA ID: ${wa_business_id} — ignoring message`);
+      return res.status(400).json(responseFormatter(STATUS.FAIL, 400, `Unknown WABA ID: ${wa_business_id} — ignoring message`, null));      
+    }
+
   }
 
   async save(req, res) {
