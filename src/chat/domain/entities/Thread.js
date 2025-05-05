@@ -1,50 +1,80 @@
-class Thread {
-  constructor({id, contactName, contactWaId, displayPhoneNumber, startTime = null, endTime = null, lastMessage, status, waBusinessId, lastUpdated = null}) {
-    // if (!contactName) throw new Error('Thread must have a contact name');
-    if (!displayPhoneNumber) throw new Error('Thread must have a display phone number');
-    // if (!startTime) throw new Error('Thread must have a start time');
-    // if (!endTime) throw new Error('Thread must have an end time');
-    // if (!lastMessage) throw new Error('Thread must have a last message');
 
+class Thread {
+  constructor({
+    id = null,
+    waBusinessId,
+    clientWaId,
+    clientName,
+    clientPhoneNumberId,
+    clientDisplayPhoneNumber,
+    unreadCount,
+    status,
+    lastMessageMediaType,
+    lastMessage,
+    firstResponseDatetime,
+    lastResponseDatetime,
+    currentHandlerUserId = null,
+    internalUserDetail = [],
+    createdAt = null,
+    updatedAt = null,
+  }){
     this.id = id || null;
-    this.contactName = contactName || 'Unknown';
-    this.contactWaId = contactWaId || null;
-    this.displayPhoneNumber = displayPhoneNumber;
-    this.startTime = startTime || null;
-    this.endTime = endTime || null;
-    this.lastMessage = lastMessage || null;
+    this.waBusinessId = waBusinessId;
+    this.clientWaId = clientWaId;
+    this.clientName = clientName;
+    this.clientPhoneNumberId = clientPhoneNumberId;
+    this.clientDisplayPhoneNumber = clientDisplayPhoneNumber;
+    this.unreadCount = unreadCount || 0;
     this.status = status;
-    this.waBusinessId = waBusinessId || null;
-    this.lastUpdated = lastUpdated || null;
+    this.lastMessageMediaType = lastMessageMediaType;
+    this.lastMessage = lastMessage;
+    this.firstResponseDatetime = firstResponseDatetime || null;
+    this.lastResponseDatetime = lastResponseDatetime || null;
+    this.currentHandlerUserId = currentHandlerUserId || null;
+    this.internalUserDetail = internalUserDetail || [];
+    this.createdAt = createdAt || Date.now();
+    this.updatedAt = updatedAt || Date.now();
   }
 
-  toPrimitive() {
+  toJson() {
     return {
       id: this.id,
-      contact_name: this.contactName,
-      contact_wa_id: this.contactWaId,
-      display_phone_number: this.displayPhoneNumber,
-      start_time: this.startTime,
-      end_time: this.endTime,
-      last_message: this.lastMessage,
-      status: this.status,
       wa_business_id: this.waBusinessId,
-      last_updated: this.lastUpdated,
-    };
+      client_wa_id: this.clientWaId,
+      client_name: this.clientName,
+      client_phone_number_id: this.clientPhoneNumberId,
+      client_display_phone_number: this.clientDisplayPhoneNumber,
+      unread_count: this.unreadCount,
+      status: this.status,
+      last_message_media_type: this.lastMessageMediaType,
+      last_message: this.lastMessage,
+      first_response_datetime: this.firstResponseDatetime,
+      last_response_datetime: this.lastResponseDatetime,
+      current_handler_user_id: this.currentHandlerUserId,
+      internal_user_detail: this.internalUserDetail,
+      created_at: this.createdAt,
+      updated_at: this.updatedAt
+    }
   }
 
   static fromJson(data) {
     return new Thread({
       id: data.id,
-      contactName: data.contact_name,
-      contactWaId: data.contact_wa_id,
-      displayPhoneNumber: data.display_phone_number,
-      startTime: data.start_time,
-      endTime: data.end_time,
-      lastMessage: data.last_message,
-      status: data.status,
       waBusinessId: data.wa_business_id,
-      lastUpdated: data.last_updated,
+      clientWaId: data.client_wa_id,
+      clientName: data.client_name,
+      clientPhoneNumberId: data.client_phone_number_id,
+      clientDisplayPhoneNumber: data.client_display_phone_number,
+      unreadCount: data.unread_count,
+      status: data.status,
+      lastMessageMediaType: data.last_message_media_type,
+      lastMessage: data.last_message,
+      firstResponseDatetime: data.first_response_datetime,
+      lastResponseDatetime: data.last_response_datetime,
+      currentHandlerUserId: data.current_handler_user_id,
+      internalUserDetail: data.internal_user_detail,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
     });
   }
 
@@ -52,19 +82,24 @@ class Thread {
     if (!doc.exists) return null;
   
     const data = doc.data();
-    
 
     return new Thread({
       id: doc.id,
-      contactName: data.contact_name,
-      contactWaId: data.contact_wa_id,
-      displayPhoneNumber: data.display_phone_number,
-      startTime: data.start_time,
-      endTime: data.end_time,
-      lastMessage: data.last_message,
-      status: data.status,
       waBusinessId: data.wa_business_id,
-      lastUpdated: data.last_updated,
+      clientWaId: data.client_wa_id,
+      clientName: data.client_name,
+      clientPhoneNumberId: data.client_phone_number_id,
+      clientDisplayPhoneNumber: data.client_display_phone_number,
+      unreadCount: data.unread_count,
+      status: data.status,
+      lastMessageMediaType: data.last_message_media_type,
+      lastMessage: data.last_message,
+      firstResponseDatetime: data.first_response_datetime,
+      lastResponseDatetime: data.last_response_datetime,
+      currentHandlerUserId: data.current_handler_user_id,
+      internalUserDetail: data.internal_user_detail,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
     });
   }
 }
