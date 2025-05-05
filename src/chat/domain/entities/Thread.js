@@ -166,6 +166,31 @@ class Thread {
       updatedAt: data.updated_at,
     });
   }
+
+  convertInternalUserDetailToJson() {
+    try {
+      const internalUserDetail = Array.isArray(this.internalUserDetail)
+        ? this.internalUserDetail
+        : [];
+  
+      return internalUserDetail.map(item => {
+        if (item instanceof InternalUserDetail) {
+          return item.toJson();
+        }
+  
+        // Optional: handle invalid items
+        if (typeof item === 'object' && item !== null) {
+          return item;
+        }
+  
+        console.warn('Invalid internalUserDetail item:', item);
+        return null;
+      }).filter(Boolean);
+    } catch (error) {
+      console.error('Failed to convert internalUserDetail to JSON:', error);
+      return [];
+    }
+  }  
 }
 
 module.exports = Thread;
