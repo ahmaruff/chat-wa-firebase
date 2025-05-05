@@ -67,12 +67,6 @@ class Thread {
   
 
   toJson() {
-    const internalUserDetail = this.internalUserDetail;
-
-    const rawInternalUserDetail = internalUserDetail.map(item =>
-      item instanceof InternalUserDetail ? item.toJson() : item
-    );
-
     return {
       id: this.id,
       wa_business_id: this.waBusinessId,
@@ -87,7 +81,7 @@ class Thread {
       first_response_datetime: this.firstResponseDatetime,
       last_response_datetime: this.lastResponseDatetime,
       current_handler_user_id: this.currentHandlerUserId,
-      internal_user_detail: rawInternalUserDetail,
+      internal_user_detail: this.convertInternalUserDetailToJson(),
       created_at: this.createdAt,
       updated_at: this.updatedAt
     }
