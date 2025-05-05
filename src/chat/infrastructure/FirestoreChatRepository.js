@@ -40,7 +40,7 @@ class FirestoreChatRepository extends ChatRepository {
   async getByThreadId(threadId) {
     try {
       const querySnapshot = await this.chatCollection
-        .where('thread', '==', threadId)
+        .where('thread_id', '==', threadId)
         .orderBy('created_at', 'asc')
         .get();
 
@@ -53,8 +53,8 @@ class FirestoreChatRepository extends ChatRepository {
 
   async save(chat) {
     try {
-      if (!chat.thread) {
-        throw new Error('Error: Thread cannot be null');
+      if (!chat.threadId) {
+        throw new Error('Error: Thread ID cannot be null');
       }
   
       let chatDocRef;
@@ -69,17 +69,22 @@ class FirestoreChatRepository extends ChatRepository {
       const timestamp = Date.now();
       const existing = await this.getById(chat.id);
   
+      // samain kaya yang ada di entity
       const chatData = {
         id: chat.id,
-        sender: chat.sender,
-        thread: chat.thread,
-        message: chat.messageContent.getValue(),
+        thread_id: chat.threadId,
+        wamid: chat.wamid,
+        client_phone_number_id: chat.clientPhoneNumberId,
+        media_id: chat.mediaId,
+        media_type: chat.mediaType,
+        media_path_name: chat.mediaPathName,
+        message: chat.message,
         unread: chat.unread ?? true,
-        created_at: existing ? existing.created_at : timestamp,
-        chat_id: chat.chatId,
-        reply_to: chat.replyTo || null,
-        replied_by: chat.repliedBy || null,
-      };
+        reply_to: chat.replyTo ?? null,
+        replied_by: chat.repliedBy ?? null,
+        created_at: existing ? existing.createdAt : timestamp,
+        updated_at: existing ? existing.updatedAt : timestamp,
+      }
   
       await chatDocRef.set(chatData, { merge: true });
   
@@ -101,6 +106,28 @@ class FirestoreChatRepository extends ChatRepository {
       throw error;
     }
   }
+
+  async markAsReadByWamid(wamid) {
+    try {
+      const querySnapshot = await this.chatCollection
+        .where('wamid', '==', wamid)
+        .orderBy('created_at', 'asc')
+        .limit(1)
+        .get();
+  
+      if (querySnapshot.empty) {
+        console.warn(`No chat found with wamid: ${wamid}`);
+        return false;
+      }
+  
+      const chatDoc = querySnapshot.docs[0];
+      await chatDoc.ref.update({ unread: false });
+      return true;
+    } catch (error) {
+      console.error('Error marking chat as read:', error);
+      throw error;
+    }
+  }  
 
   async markThreadAsRead(threadId) {
     try {

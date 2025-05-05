@@ -15,6 +15,10 @@ class ChatRepository {
   getByWamid(wamid) {
     throw new Error("Method getByWamid() must be implemented");
   }
+
+  markAsRead(id) {
+    throw new Error("Method markAsRead() must be implemented");
+  }
 }
 
 module.exports = ChatRepository;
