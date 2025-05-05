@@ -1,68 +1,103 @@
-const MessageContent = require('../valueObjects/MessageContent');
-
 class Chat {
-  constructor({id, sender, thread, messageContent, unread = true, chatId = null, replyTo = null, repliedBy = null, createdAt = null}){
-    if (!sender) throw new Error('Chat must have a sender');
-    if (!thread) throw new Error('Chat must have a thread');
-    if (!(messageContent instanceof MessageContent)) {
-      throw new Error('messageContent must be instance of MessageContent');
-    }
+  constructor({
+    id,
+    threadId,
+    wamid,
+    clientPhoneNumberId,
+    mediaId,
+    mediaType,
+    mediaPathName,
+    message,
+    unread,
+    replyTo,
+    repliedBy,
+    createdAt,
+    updatedAt,
+  }){
 
-    this.id = id || null;
-    this.chatId = chatId || null;
-    this.sender = sender;
-    this.thread = thread || null;
-    this.messageContent = messageContent;
-    this.unread = unread;
-    this.createdAt = createdAt || null;
-    this.replyTo = replyTo || null;
-    this.repliedBy = repliedBy | null;
-    this.createdAt = createdAt || Date.now();
+    Thread.validateInput({
+      threadId,
+      clientPhoneNumberId,
+      message
+    });
+
+    this.id = id ?? null;
+    this.threadId = threadId;
+    this.wamid = wamid ?? null;
+    this.clientPhoneNumberId = clientPhoneNumberId;
+    this.mediaId = mediaId ?? null;
+    this.mediaType = mediaType;
+    this.mediaPathName = mediaPathName ?? null;
+    this.message = message;
+    this.unread = unread ?? true;
+    this.replyTo = replyTo ?? null;
+    this.repliedBy = repliedBy ?? null;
+    this.createdAt = createdAt ?? Date.now();
+    this.updatedAt = updatedAt ?? Date.now();
   }
 
-  toPrimitive() {
-    return {
-      id: this.id,
-      sender: this.sender,
-      thread: this.thread,
-      message: this.messageContent.getValue(),
-      created_at: this.createdAt,
-      chat_id: this.chatId,
-      reply_to: this.replyTo,
-      replied_by: this.repliedBy,
-      unread: this.unread,
-    }
+  static validateInput(data) {
+    if (!data.threadId) throw new Error("threadId is required");
+    if (!data.clientPhoneNumberId) throw new Error("clientPhoneNumberId is required");
+    if (!data.message) throw new Error("message is required");
+    return true;
   }
 
   static fromJson(data) {
     return new Chat({
-      id: data.id,
-      sender: data.sender,
-      thread: data.thread,
-      messageContent: new MessageContent(data.message),
-      chatId: data.chat_id,
-      replyTo: data.reply_to,
-      repliedBy: data.replied_by,
-      createdAt: data.created_at,
+      id: data.id ?? null,
+      threadId: data.thread_id,
+      wamid: data.wamid,
+      clientPhoneNumberId: data.client_phone_number_id,
+      mediaId: data.media_id,
+      mediaType: data.media_type,
+      mediaPathName: data.media_path_name,
+      message: data.message,
       unread: data.unread,
+      replyTo: data,reply_to,
+      repliedBy: data,replied_by,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
     });
+  }
+
+  toJson() {
+    return {
+      id: this.id,
+      thread_id: this.threadId,
+      wamid: this.wamid,
+      client_phone_number_id: this.clientPhoneNumberId,
+      media_id: this.mediaId,
+      media_type: this.mediaType,
+      media_path_name: this.mediaPathName,
+      message: this.message,
+      unread: this.unread,
+      reply_to: this.replyTo,
+      replied_by: this.repliedBy,
+      created_at: this.createdAt,
+      updated_at: this.updatedAt,
+    }
   }
 
   static fromFirestore(doc) {
     if (!doc.exists) return null;
   
     const data = doc.data();
-    
+
     return new Chat({
-      id: doc.id,
-      sender: data.sender,
-      thread: data.thread,
-      messageContent: new MessageContent(data.message),
-      createdAt: data.created_at,
+      id: data.id ?? null,
+      threadId: data.thread_id,
+      wamid: data.wamid,
+      clientPhoneNumberId: data.client_phone_number_id,
+      mediaId: data.media_id,
+      mediaType: data.media_type,
+      mediaPathName: data.media_path_name,
+      message: data.message,
       unread: data.unread,
-      chatId: data.chat_id,
-      replyTo: data.reply_to,
-      repliedBy: data.replied_by,
+      replyTo: data,reply_to,
+      repliedBy: data,replied_by,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
     });
   }
 }
