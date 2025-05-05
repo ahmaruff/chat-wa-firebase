@@ -58,3 +58,5 @@ class ManageChat{
     }
   }
 }
+
+module.exports = ManageChat;
