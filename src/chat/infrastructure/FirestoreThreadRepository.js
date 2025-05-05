@@ -15,15 +15,11 @@ class FirestoreThreadRepository extends ThreadRepository {
 
   _documentToEntity(doc) {
     if (!doc.exists) return null;
-    
-    const data = doc.data();
-
     return Thread.fromFirestore(doc);
   }
 
   async save(thread) {
     try {
-
       let threadDocRef;
   
       if (thread.id) {
@@ -56,7 +52,7 @@ class FirestoreThreadRepository extends ThreadRepository {
         first_response_datetime: thread.firstResponseDatetime,
         last_response_datetime: thread.lastResponseDatetime,
         current_handler_user_id: thread.currentHandlerUserId,
-        internal_user_detail: rawInternalUserDetail,
+        internal_user_detail: thread.convertInternalUserDetailToJson(),
         created_at: thread.createdAt ?? timestamp,
         updated_at: timestamp
       }
@@ -123,6 +119,7 @@ class FirestoreThreadRepository extends ThreadRepository {
       console.warn('Missing waBusinessId or clientWaId:', { waBusinessId, clientWaId });
       return null;
     }
+    
     try {
       const existingThreadQuery = await this.threadCollection
         .where('wa_business_id', '==', waBusinessId)
