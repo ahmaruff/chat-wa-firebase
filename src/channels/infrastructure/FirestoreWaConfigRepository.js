@@ -109,6 +109,22 @@ class FirestoreWaConfigRepository extends WaConfigRepository{
     }
   }
 
+  async getByWaBusinessId(channelId, waBusinessId) {
+    try {
+      const snapshot = await this.collection
+        .where('channel_id', channelId)
+        .where('wa_business_id', waBusinessId)
+        .limit(1)
+        .get();
+
+      const doc = snapshot.docs[0];
+      return this._documentToEntity(doc);
+    } catch (error) {
+      console.error('Error getting Wa Config by wa bussiness id:', error);
+      throw error;
+    }
+  }
+
   async getAllActive(channelId){
     try {
       const snapshot = await this.collection
