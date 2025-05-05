@@ -12,7 +12,7 @@ class ThreadRepository {
     throw new Error("Method getById() must be implemented");
   }
 
-  getByWhatsappInfo(waBusinessId, contactWaId) {
+  getByWhatsappInfo(waBusinessId, clientWaId) {
     throw new Error("Method getByWhatsappInfo() must be implemented");
   }
 }
