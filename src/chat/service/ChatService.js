@@ -1,9 +1,8 @@
-const ChatServiceInterface = require('../interface/services/ChatServiceInterface');
 const SaveChatWithThread = require('../application/usecase/SaveChatWithThread');
 const FirestoreThreadRepository = require('../infrastructure/FirestoreThreadRepository');
 const FirestoreChatRepository = require('../infrastructure/FirestoreChatRepository');
 
-class ChatService extends ChatServiceInterface {
+class ChatService {
   constructor() {
     super();
     this.threadRepository = new FirestoreThreadRepository();
