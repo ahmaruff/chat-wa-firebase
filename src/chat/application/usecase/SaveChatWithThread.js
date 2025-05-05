@@ -11,105 +11,119 @@ class SaveChatWithThread {
   }
 
   async execute({
-    id,
-    chatId,
-    sender,
-    recipientNumber,
-    contactName,
-    contactWaId,
-    messageText,
-    lastMessage,
     waBusinessId,
-    status = THREAD_STATUS.QUEUE,
-    unread,
-    displayPhoneNumber,
-    createdAt = Date.now(),
+    clientWaId,
+    clientName,
+    clientPhoneNumberId,
+    clientDisplayPhoneNumber,
+    unreadCount,
+    threadStatus,
+    firstResponseDatetime = Date.now(),
+    lastResponseDatetime = null,
+    currentHandlerUserId = null,
+    internalUserDetail = [],
+    threadCreatedAt = Date.now(),
+    threadUpdatedAt = Date.now(),
+    wamid = null,
+    mediaId = null,
+    mediaType = null,
+    mediaPathName = null,
+    message,
+    unread = true,
     replyTo,
     repliedBy,
-    endTime = null,
-    startTime,
-  }) {
+    chatCreatedAt = Date.now(),
+    chatUpdatedAt = Date.now(),
+  }){
+
     let isNewThread = false;
     let originalThread = null;
     let thread = null;
-    
-    thread = await this.threadRepository.getByWhatsappInfo(waBusinessId, contactWaId);
-
-    if (!thread) {
-      isNewThread = true;
-
-      thread = new Thread({
-        id: null,
-        waBusinessId: waBusinessId,
-        contactName: contactName,
-        contactWaId: contactWaId,
-        displayPhoneNumber: displayPhoneNumber,
-        startTime: Date.now(),
-        endTime: null,
-        lastMessage: messageText,
-        lastUpdated: Date.now(),
-        status: status,
-        endTime: endTime || null
-      });
-
-      const t = await this.threadRepository.save(thread);
-      thread = t;
-
-    } else {
-      const updateThread = new Thread({
-        id: thread.id,
-        contactName: contactName || thread.contactName,
-        contactWaId: contactWaId || thread.contactWaId,
-        displayPhoneNumber: displayPhoneNumber || thread.displayPhoneNumber,
-        startTime: startTime || thread.startTime,
-        lastMessage: lastMessage || thread.lastMessage || null,
-        lastUpdated: Date.now(),
-        status: status || thread.status,
-        waBusinessId: waBusinessId || thread.waBusinessId,
-        endTime: endTime || null
-      });
-
-      const t = await this.threadRepository.save(updateThread);
-      thread = t;
-
-      originalThread = thread.toPrimitive();
-    }
 
     try {
+      thread = await this.threadRepository.getByWhatsappInfo(waBusinessId, clientWaId);
+
+      if(!thread) {
+        isNewThread  = true;
+        thread = new Thread({
+          id: null,
+          waBusinessId: waBusinessId,
+          clientWaId: clientWaId,
+          clientName: clientName,
+          clientPhoneNumberId: clientPhoneNumberId,
+          clientDisplayPhoneNumber: clientDisplayPhoneNumber,
+          unreadCount: unreadCount ?? 0,
+          status: threadStatus,
+          lastMessageMediaType: mediaType,
+          lastMessage: message,
+          firstResponseDatetime: firstResponseDatetime ?? Date.now(),
+          lastResponseDatetime: lastResponseDatetime ?? null,
+          currentHandlerUserId: currentHandlerUserId ?? null,
+          internalUserDetail: internalUserDetail,
+          createdAt:  threadCreatedAt ?? Date.now(),
+          updatedAt: threadUpdatedAt ?? Date.now(),
+        });
+
+        const t = await this.threadRepository.save(thread);
+        thread = t;
+      } else {
+        isNewThread = false;
+        originalThread = thread.toJson();
+        const updatedThread = new Thread({
+          id: thread.id,
+          waBusinessId: waBusinessId ?? thread.waBusinessId,
+          clientWaId: clientWaId ?? thread.clientWaId,
+          clientName: clientName ?? thread.clientName,
+          clientPhoneNumberId: clientPhoneNumberId ?? thread.clientPhoneNumberId,
+          clientDisplayPhoneNumber: clientDisplayPhoneNumber ?? thread.clientDisplayPhoneNumber,
+          unreadCount: unreadCount ?? thread.unreadCount,
+          status: threadStatus ?? thread.status,
+          lastMessageMediaType: mediaType ?? thread.lastMessageMediaType,
+          lastMessage: message ?? thread.lastMessage,
+          firstResponseDatetime: firstResponseDatetime ?? thread.firstResponseDatetime,
+          lastResponseDatetime: lastResponseDatetime ?? thread.lastResponseDatetime,
+          currentHandlerUserId: currentHandlerUserId ?? thread.currentHandlerUserId,
+          internalUserDetail: internalUserDetail ?? thread.internalUserDetail,
+          createdAt: threadCreatedAt ?? thread.createdAt,
+          updatedAt: threadUpdatedAt ?? thread.updatedAt
+        });
+
+        const t = await this.threadRepository.save(updatedThread);
+        thread = t;
+      }  
+
       const chat = new Chat({
-        id: id,
-        chatId: chatId,
-        sender: sender,
-        thread: thread.id,
-        messageContent: new MessageContent(messageText),
-        createdAt: null,
-        unread: unread,
-        createdAt: createdAt,
-        repliedBy: repliedBy || null,
-        replyTo: replyTo || null
+        id: null,
+        threadId: thread.id,
+        wamid: wamid ?? null,
+        clientPhoneNumberId: clientPhoneNumberId,
+        mediaId: mediaId ?? null,
+        mediaType: mediaType ?? null,
+        mediaPathName: mediaPathName ?? null,
+        message: message,
+        unread: unread ?? true,
+        replyTo: replyTo ?? null,
+        repliedBy: repliedBy ?? null,
+        createdAt: chatCreatedAt ?? Date.now(),
+        updatedAt: chatUpdatedAt ?? Date.now(),
       });
-      
+
       const chatRes = await this.chatRepository.save(chat);
   
-      if (!isNewThread) {
-        thread.lastMessage = messageText;
-        thread.lastUpdated = null;
-        await this.threadRepository.save(thread);
-      }
-  
       return {
-        chatId: chatRes.id,
-        threadId: thread.id,
+        chat : chatRes,
+        thread: thread,
         isNewThread: isNewThread
       }; 
+
     } catch (error) {
-      // Rollback thread creation if there was an error saving the chat
       if (isNewThread && thread.id) {
         await this.threadRepository.delete(thread.id);
         console.log(`New thread ${thread.id} would be deleted due to chat save failure`);
       } else if (originalThread) {
-        await this.threadRepository.save(new Thread(originalThread));
-        console.log(`Thread ${thread.id} reverted to original state due to chat save failure`);
+        const t = Thread.fromJson(originalThread);
+        await this.threadRepository.save(t);
+        console.log(`Thread ${t.id} reverted to original state due to chat save failure`);
       }
       
       throw error;
