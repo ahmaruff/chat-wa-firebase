@@ -39,13 +39,14 @@ class FirestoreChannelRepository extends ChannelRepository {
 
     try {
       const data = channel.toJson();
-      data.updatedAt = Date.now();
+      data.updated_at = Date.now();
 
       let docRef;
       if (channel.id) {
         // Update existing document
         docRef = this.collection.doc(channel.id);
-        await docRef.update(data);
+        await docRef.update(data);        
+        onsole.log(`Updated channel with ID: ${channel.id}`);
         
         const updatedDoc = await docRef.get();
         return this._documentToEntity(updatedDoc);
@@ -55,6 +56,7 @@ class FirestoreChannelRepository extends ChannelRepository {
         data.id = docRef.id;  
         data.createdAt = Date.now();
         await docRef.set(data);
+        console.log(`Created new entity with ID: ${data.id}`);
 
         const snapshot = await docRef.get();
         return this._documentToEntity(snapshot);
