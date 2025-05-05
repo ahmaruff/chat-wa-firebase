@@ -11,32 +11,63 @@ class ChatService extends ChatServiceInterface {
     this.saveChatWithThread = new SaveChatWithThread(this.threadRepository, this.chatRepository);
   }
 
-  async createChatFromExternalSource({ id, chatId, senderNumber,  recipientNumber, contactName, messageText, waBusinessId, status, unread, displayPhoneNumber, createdAt, replyTo, repliedBy, contactWaId, endTime, startTime }) {
+  async createChatFromExternalSource({
+    waBusinessId,
+    clientWaId,
+    clientName,
+    clientPhoneNumberId,
+    clientDisplayPhoneNumber,
+    unreadCount,
+    threadStatus,
+    firstResponseDatetime,
+    lastResponseDatetime,
+    currentHandlerUserId,
+    internalUserDetail,
+    threadCreatedAt,
+    threadUpdatedAt,
+    wamid,
+    mediaId,
+    mediaType,
+    mediaPathName,
+    message,
+    unread,
+    replyTo,
+    repliedBy,
+    chatCreatedAt,
+    chatUpdatedAt
+  }) {
     try {
       const result = await this.saveChatWithThread.execute({
-        chatId: chatId,
-        sender: senderNumber,
-        recipientNumber: recipientNumber,
-        contactName: contactName,
-        messageText: messageText,
         waBusinessId: waBusinessId,
-        status: status,
-        unread: unread,
-        displayPhoneNumber: displayPhoneNumber,
-        createdAt: createdAt,
-        replyTo: replyTo,
-        repliedBy: repliedBy,
-        contactWaId: contactWaId,
-        id: id || null,
-        endTime: endTime || null,
-        startTime: startTime
+        clientWaId: clientWaId,
+        clientName: clientName,
+        clientPhoneNumberId: clientPhoneNumberId,
+        clientDisplayPhoneNumber: clientDisplayPhoneNumber,
+        unreadCount: unreadCount,
+        threadStatus: threadStatus,
+        firstResponseDatetime: firstResponseDatetime,
+        lastResponseDatetime: lastResponseDatetime,
+        currentHandlerUserId: currentHandlerUserId,
+        internalUserDetail: internalUserDetail ?? [],
+        threadCreatedAt: threadCreatedAt,
+        threadUpdatedAt: threadUpdatedAt,
+        wamid: wamid,
+        mediaId: mediaId,
+        mediaType : mediaType,
+        mediaPathName: mediaPathName,
+        message : message,
+        unread: unread ?? true,
+        replyTo: replyTo ?? null,
+        repliedBy: repliedBy ?? null,
+        chatCreatedAt: chatCreatedAt,
+        chatUpdatedAt: chatUpdatedAt
       });
 
-      console.log('chat ext:', result);
+      console.log('success create chat from external source:', result);
 
       return result;
     } catch (error) {
-      console.log('Error create chat from external source: ', error);
+      console.error('Error create chat from external source:', error);
       throw error;
     }
   }
