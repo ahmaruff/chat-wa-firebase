@@ -4,7 +4,6 @@ const FirestoreChatRepository = require('../infrastructure/FirestoreChatReposito
 
 class ChatService {
   constructor() {
-    super();
     this.threadRepository = new FirestoreThreadRepository();
     this.chatRepository = new FirestoreChatRepository();
     this.saveChatWithThread = new SaveChatWithThread(this.threadRepository, this.chatRepository);
