@@ -42,4 +42,48 @@ class WaConfigController {
       return res.status(500).json(responseFormatter(STATUS.ERROR, 500, `Create wa config failed: ${error.message}`,null));
     }
   }
+
+  async getById(req, res) {
+    try {
+      const { id } = req.params;
+
+      const waConfig = await this.manageWaConfig.getById(id);
+      return res.status(200).json(responseFormatter(STATUS.SUCCESS, 200, 'Get wa config success', {
+        wa_config: waConfig,
+      }));
+    } catch (error) {
+      console.error('Controller - Failed get wa config by id: ', error);
+      return res.status(500).json(responseFormatter(STATUS.ERROR, 500, error.message, null));
+    }
+  }
+
+  async getByChannelId(req, res) {
+    try {
+      const { channel_id } = req.body;
+
+      const waConfig = await this.manageWaConfig.getByChannelId(channel_id);
+      return res.status(200).json(responseFormatter(STATUS.SUCCESS, 200, 'Get wa config success', {
+        wa_config: waConfig,
+      }));
+    } catch (error) {
+      console.error('Controller - Failed get wa config by channel id: ', error);
+      return res.status(500).json(responseFormatter(STATUS.ERROR, 500, error.message, null));
+    }
+  }
+
+  async delete(req, res) {
+    try {
+      const { id } = req.body;
+      const result = await this.manageWaConfig.delete(id);
+
+      if(!result) {
+        return res.status(400).json(responseFormatter(STATUS.FAIL, 400), 'Failed delete wa config', null);
+      }
+
+      return res.status(200).json(responseFormatter(STATUS.SUCCESS, 200), 'Success delete wa config', null);
+    } catch (error) {
+      console.error('Controller - Failed delete wa config:', error);
+      return res.status(500).json(responseFormatter(STATUS.ERROR, 500, error.message, null));
+    }
+  }
 }

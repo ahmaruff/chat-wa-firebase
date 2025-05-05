@@ -139,4 +139,266 @@ const waConfigController = new WaConfigController(firestoreWaConfigRepository);
  */
 router.post('/', (req, res) => waConfigController.save(req, res));
 
+/**
+ * @swagger
+ * /wa-configs/{id}:
+ *   get:
+ *     summary: Get a WhatsApp Configuration by ID
+ *     tags: [WaConfigs]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: "waconfig-123"
+ *         description: WhatsApp Configuration ID
+ *     responses:
+ *       200:
+ *         description: WhatsApp Configuration retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "SUCCESS"
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "Get wa config success"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     wa_config:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                           example: "waconfig-123"
+ *                         channelId:
+ *                           type: string
+ *                           example: "channel-123"
+ *                         isActive:
+ *                           type: boolean
+ *                           example: true
+ *                         waBusinessId:
+ *                           type: string
+ *                           example: "waba-123456789"
+ *                         phoneNumberId:
+ *                           type: string
+ *                           example: "123456789"
+ *                         displayPhoneNumber:
+ *                           type: string
+ *                           example: "+6281234567890"
+ *                         accessToken:
+ *                           type: string
+ *                           example: "EAAJZCZCx..."
+ *                         participants:
+ *                           type: array
+ *                           items:
+ *                             type: string
+ *                           example: ["user-123", "user-456"]
+ *                         createdAt:
+ *                           type: number
+ *                           example: 1623674829000
+ *                         updatedAt:
+ *                           type: number
+ *                           example: 1623674829000
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "ERROR"
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: "Error message"
+ *                 data:
+ *                   type: null
+ */
+router.get('/:id', (req, res) => waConfigController.getById(req, res));
+
+/**
+ * @swagger
+ * /wa-configs/get-by-channel:
+ *   post:
+ *     summary: Get WhatsApp Configuration by Channel ID
+ *     tags: [WaConfigs]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - channel_id
+ *             properties:
+ *               channel_id:
+ *                 type: string
+ *                 description: Channel ID to find WhatsApp configuration for
+ *                 example: "channel-123"
+ *     responses:
+ *       200:
+ *         description: WhatsApp Configuration retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "SUCCESS"
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "Get wa config success"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     wa_config:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                           example: "waconfig-123"
+ *                         channelId:
+ *                           type: string
+ *                           example: "channel-123"
+ *                         isActive:
+ *                           type: boolean
+ *                           example: true
+ *                         waBusinessId:
+ *                           type: string
+ *                           example: "waba-123456789"
+ *                         phoneNumberId:
+ *                           type: string
+ *                           example: "123456789"
+ *                         displayPhoneNumber:
+ *                           type: string
+ *                           example: "+6281234567890"
+ *                         accessToken:
+ *                           type: string
+ *                           example: "EAAJZCZCx..."
+ *                         participants:
+ *                           type: array
+ *                           items:
+ *                             type: string
+ *                           example: ["user-123", "user-456"]
+ *                         createdAt:
+ *                           type: number
+ *                           example: 1623674829000
+ *                         updatedAt:
+ *                           type: number
+ *                           example: 1623674829000
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "ERROR"
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: "Error message"
+ *                 data:
+ *                   type: null
+ */
+router.post('/get-by-channel', (req, res) => waConfigController.getByChannelId(req, res));
+
+/**
+ * @swagger
+ * /wa-configs:
+ *   delete:
+ *     summary: Delete a WhatsApp Configuration
+ *     tags: [WaConfigs]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - id
+ *             properties:
+ *               id:
+ *                 type: string
+ *                 description: ID of the WhatsApp configuration to delete
+ *                 example: "waconfig-123"
+ *     responses:
+ *       200:
+ *         description: WhatsApp Configuration deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "SUCCESS"
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "Success delete wa config"
+ *                 data:
+ *                   type: null
+ *       400:
+ *         description: Failed to delete WhatsApp Configuration
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "FAIL"
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: "Failed delete wa config"
+ *                 data:
+ *                   type: null
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "ERROR"
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: "Error message"
+ *                 data:
+ *                   type: null
+ */
+router.delete('/', (req, res) => waConfigController.delete(req, res));
+
 module.exports = router;
