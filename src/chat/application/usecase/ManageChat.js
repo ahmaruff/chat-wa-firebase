@@ -48,6 +48,20 @@ class ManageChat{
     }
   }
 
+  async markAsReadByWamid(wamid) {
+    try {
+      const chat = await this.markAsReadByWamid(wamid);
+      if (!chat) {
+        throw new Error('Failed marking chat as read');
+      }
+
+      return chat;
+    } catch (error) {
+      console.error('Error marking chat as read by wamid:', error);
+      throw error;
+    }
+  }
+
   async save(chat) {
     try {
       const c = await this.chatRepository.save(chat);
