@@ -8,7 +8,7 @@ class ChannelService {
     this.channelRepository = channelRepository;
     this.waConfigRepository = waConfigRepository;
     this.manageChannel = new ManageChannel(this.channelRepository);
-    this.manageWaConfig = new ManageWaConfig(this.waConfigRepository);
+    this.manageWaConfig = new ManageWaConfig(this.waConfigRepository, this.channelRepository);
   }
 
   async saveChannel({
