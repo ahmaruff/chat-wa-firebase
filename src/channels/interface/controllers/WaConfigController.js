@@ -76,10 +76,9 @@ class WaConfigController {
   async getByWaBusinessId(req, res) {
     try {
       const { wa_business_id } = req.body;
-      console.log(wa_business_id);
 
       const waConfig = await this.manageWaConfig.getByWaBusinessId(wa_business_id);
-      console.log(waConfig);
+
       return res.status(200).json(responseFormatter(STATUS.SUCCESS, 200, 'Get wa config success', {
         wa_config: waConfig,
       }));
