@@ -14,6 +14,7 @@ class WaConfigController {
       const {
         channel_id,
         is_active = true,
+        name,
         wa_business_id,
         phone_number_id,
         display_phone_number,
@@ -25,6 +26,7 @@ class WaConfigController {
         id: null,
         channelId: channel_id,
         isActive: is_active,
+        name: name,
         waBusinessId: wa_business_id,
         phoneNumberId: phone_number_id,
         displayPhoneNumber: display_phone_number,
@@ -74,8 +76,10 @@ class WaConfigController {
   async getByWaBusinessId(req, res) {
     try {
       const { wa_business_id } = req.body;
+      console.log(wa_business_id);
 
       const waConfig = await this.manageWaConfig.getByWaBusinessId(wa_business_id);
+      console.log(waConfig);
       return res.status(200).json(responseFormatter(STATUS.SUCCESS, 200, 'Get wa config success', {
         wa_config: waConfig,
       }));

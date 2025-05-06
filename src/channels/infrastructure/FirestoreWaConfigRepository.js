@@ -36,8 +36,9 @@ class FirestoreWaConfigRepository extends WaConfigRepository{
     }
 
     try {
+      const timestamp = Date.now();
       const data = waConfig.toJson();
-      data.updatedAt = Date.now();
+      data.updated_at = timestamp;
 
       let docRef;
       if (waConfig.id) {
@@ -51,7 +52,7 @@ class FirestoreWaConfigRepository extends WaConfigRepository{
         // Create new document
         docRef = this.collection.doc();
         data.id = docRef.id;  
-        data.createdAt = Date.now();
+        data.created_at = timestamp;
         await docRef.set(data);
 
         const snapshot = await docRef.get();
@@ -112,7 +113,7 @@ class FirestoreWaConfigRepository extends WaConfigRepository{
   async getByWaBusinessId(waBusinessId) {
     try {
       const snapshot = await this.collection
-        .where('wa_business_id', waBusinessId)
+        .where('wa_business_id', '==',waBusinessId)
         .limit(1)
         .get();
 

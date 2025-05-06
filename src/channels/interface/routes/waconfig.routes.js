@@ -26,6 +26,7 @@ const waConfigController = new WaConfigController(firestoreWaConfigRepository);
  *           schema:
  *             type: object
  *             required:
+ *               - name
  *               - channel_id
  *               - wa_business_id
  *               - phone_number_id
@@ -41,6 +42,10 @@ const waConfigController = new WaConfigController(firestoreWaConfigRepository);
  *                 description: Whether this WhatsApp configuration is active
  *                 default: true
  *                 example: true
+ *               name:
+ *                 type: string
+ *                 description: Account name
+ *                 example: CS Dinda
  *               wa_business_id:
  *                 type: string
  *                 description: WhatsApp Business ID
@@ -95,6 +100,9 @@ const waConfigController = new WaConfigController(firestoreWaConfigRepository);
  *                         isActive:
  *                           type: boolean
  *                           example: true
+ *                         name:
+ *                           type: string
+ *                           example: CS Dinda
  *                         waBusinessId:
  *                           type: string
  *                           example: "waba-123456789"
@@ -326,7 +334,7 @@ router.post('/get-by-channel', (req, res) => waConfigController.getByChannelId(r
 
 /**
  * @swagger
- * /wa-configs/get-by-wa-bussiness-id:
+ * /wa-configs/get-by-wa-business-id:
  *   post:
  *     summary: Get WhatsApp Configuration by WA business ID
  *     tags: [WaConfigs]
