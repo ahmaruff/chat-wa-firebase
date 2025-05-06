@@ -50,7 +50,7 @@ class ManageWaConfig{
         throw new Error(`Error get wa config by crm channel id. channel with crm channel id: ${crmChannelId} not found`);
       }
 
-      const result = await this.waConfigRepository.getByCrmChannelId(channel.id);
+      const result = await this.waConfigRepository.getByChannelId(channel.id);
 
       if(!result) {
         throw new Error(`Wa Config with crm channel id ${crmChannelId} not found`);

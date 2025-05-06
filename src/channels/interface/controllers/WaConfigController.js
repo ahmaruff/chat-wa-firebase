@@ -6,7 +6,8 @@ const WaConfig = require("../../domain/entities/WaConfig");
 class WaConfigController {
   constructor(waConfigRepository, channelRepository) {
     this.waConfigRepository = waConfigRepository;
-    this.manageWaConfig = new ManageWaConfig(this.waConfigRepository, channelRepository);
+    this.channelRepository = channelRepository;
+    this.manageWaConfig = new ManageWaConfig(this.waConfigRepository, this.channelRepository);
   }
 
   async save(req, res) {
@@ -112,7 +113,7 @@ class WaConfigController {
       return res.status(200).json(responseFormatter(STATUS.SUCCESS, 200, 'Get wa config success', {
         wa_config: waConfig,
       }));
-      
+
     } catch (error) {
       console.error('Controller - Failed get wa config by participants: ', error);
       return res.status(500).json(responseFormatter(STATUS.ERROR, 500, error.message, null));

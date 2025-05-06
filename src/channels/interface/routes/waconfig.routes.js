@@ -1,10 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const FirestoreWaConfigRepository = require('../../infrastructure/FirestoreWaConfigRepository');
 const WaConfigController = require('../controllers/WaConfigController');
+const FirestoreWaConfigRepository = require('../../infrastructure/FirestoreWaConfigRepository');
+const FirestoreChannelRepository = require('../../infrastructure/FirestoreChannelRepository');
 
 const firestoreWaConfigRepository = new FirestoreWaConfigRepository();
-const waConfigController = new WaConfigController(firestoreWaConfigRepository);
+const firestoreChannelRepository = new FirestoreChannelRepository();
+const waConfigController = new WaConfigController(firestoreWaConfigRepository, firestoreChannelRepository);
 
 /**
  * @swagger
