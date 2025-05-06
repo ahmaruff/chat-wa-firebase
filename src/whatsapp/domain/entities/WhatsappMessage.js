@@ -1,134 +1,233 @@
+const THREAD_STATUS = require('../../../shared/constants/chatStatus');
 
 class WhatsappMessage {
-  constructor(data) {
-    // Core message properties
-    this.id = data.id || null; // WhatsApp message ID (wamid.ID)
-    this.from = data.from || null;
-    this.timestamp = data.timestamp || Date.now();
-    this.type = data.type || 'text';
-    this.body = data.body || null;
-    
-    // Metadata
-    this.waBusinessAccountId = data.waBusinessAccountId || null;
-    this.phoneNumberId = data.phoneNumberId || null;
-    this.displayPhoneNumber = data.displayPhoneNumber || null;
-    
-    // Contact information
-    this.contactName = data.contactName || null;
-    this.contactWaId = data.contactWaId || null;
-    
-    // Additional fields
-    this.status = data.status || 'received';
-    this.createdAt = data.createdAt || Date.now();
-    this.endTime = data.endTime || null;
-    this.startTime = data.startTime || null;
+  constructor({
+    wamid = null,
+    waBusinessId = null,
+    phoneNumberId = null,
+    displayPhoneNumber = null,
+
+    from = null,
+    to = null,
+    type = null,
+    body = null,
+    mediaType = null,
+    mediaId = null,
+    mediaPath = null,
+    timestamp = null,
+    direction = null,
+
+    clientWaId = null,
+    clientName = null,
+
+    status = null,
+    statusUpdatedAt = null,
+  }) {
+    this.wamid = wamid;
+    this.waBusinessId = waBusinessId;
+    this.phoneNumberId = phoneNumberId;
+    this.displayPhoneNumber = displayPhoneNumber;
+
+    this.from = from;
+    this.to = to;
+    this.type = type;
+    this.body = body;
+    this.mediaType = mediaType;
+    this.mediaId = mediaId;
+    this.mediaPath = mediaPath;
+    this.timestamp = timestamp;
+    this.direction = direction;
+
+    this.clientWaId = clientWaId;
+    this.clientName = clientName;
+
+    this.status = status;
+    this.statusUpdatedAt = statusUpdatedAt;
   }
 
-  toJSON() {
+  toJson() {
     return {
-      id: this.id,
+      wamid: this.wamid,
+      wa_business_id: this.waBusinessId,
+      phone_number_id: this.phoneNumberId,
+      display_phone_number: this.displayPhoneNumber,
+
       from: this.from,
-      timestamp: this.timestamp,
+      to: this.to,
       type: this.type,
       body: this.body,
-      wa_business_id: this.waBusinessAccountId,
-      phone_number_d: this.phoneNumberId,
-      display_phone_number: this.displayPhoneNumber,
-      contact_name: this.contactName,
-      contact_wa_id: this.contactWaId,
+      media_type: this.mediaType,
+      media_id: this.mediaId,
+      media_path: this.mediaPath,
+      timestamp: this.timestamp,
+      direction: this.direction,
+
+      client_wa_id: this.clientWaId,
+      client_name: this.clientName,
+
       status: this.status,
-      created_at: this.createdAt,
-      end_time: this.endTime,
-      start_time: this.startTime,
+      status_updated_at: this.statusUpdatedAt,
     };
   }
 
-  /**
-   * Creates a WhatsappMessage instance from a WhatsApp webhook payload
-   * @param {Object} payload - The webhook payload from WhatsApp
-   * @returns {WhatsappMessage|null} - A WhatsappMessage instance or null if parsing fails
-   */
-  static fromWhatsAppPayload(payload) {
-    try {
-      if (!payload || !payload.object || !payload.entry || !payload.entry.length) {
-        console.error('Invalid WhatsApp payload structure');
-        return null;
-      }
+  static fromPayload(payload) {
+    if (
+      !payload ||
+      !payload.entry?.length ||
+      !payload.entry[0].changes?.length
+    ) {
+      return null;
+    }
 
-      const entry = payload.entry[0];
-      const change = entry.changes[0];
-      
-      if (!change || !change.value || !change.value.messages || !change.value.messages.length) {
-        console.error('No messages in WhatsApp payload');
-        return null;
-      }
+    const entry = payload.entry[0];
+    const change = entry.changes[0];
+    const value = change.value || {};
+    const metadata = value.metadata || {};
 
-      const metadata = change.value.metadata;
-      const message = change.value.messages[0];
-      const contact = change.value.contacts && change.value.contacts.length ? 
-                      change.value.contacts[0] : null;
+    const waBusinessId = entry.id || null;
+    const phoneNumberId = metadata.phone_number_id || null;
+    const displayPhoneNumber = metadata.display_phone_number || null;
 
-      // Extract message body based on message type
+    // Case: Incoming message
+    if (value.messages?.length) {
+      const msg = value.messages[0];
+      const contact = value.contacts?.[0] || {};
+      const profile = contact.profile || {};
+
+      let mediaType = null;
       let body = null;
-      if (message.type === 'text' && message.text) {
-        body = message.text.body;
-      } else if (message.type === 'image' && message.image) {
-        body = message.image.caption || 'Image received';
-      } else if (message.type === 'document' && message.document) {
-        body = message.document.caption || 'Document received';
-      } else if (message.type === 'audio' && message.audio) {
-        body = 'Audio received';
-      } else if (message.type === 'video' && message.video) {
-        body = message.video.caption || 'Video received';
-      } else {
-        body = `Message of type ${message.type} received`;
+      let mediaId = null;
+      let mediaPath = null;
+
+      switch (msg.type) {
+        case 'text':
+          mediaType = 'text';
+          body = msg.text?.body || null;
+          break;
+        case 'image':
+          mediaType = 'image';
+          body = msg.image?.caption || 'Image';
+          mediaId = msg.image?.id || null;
+          mediaPath = msg.image?.mime_type || null;
+          break;
+        case 'document':
+          mediaType = 'document';
+          body = msg.document?.caption || 'Document';
+          mediaId = msg.document?.id || null;
+          mediaPath = msg.document?.filename || null;
+          break;
+        case 'video':
+          mediaType = 'video';
+          body = msg.video?.caption || 'Video';
+          mediaId = msg.video?.id || null;
+          mediaPath = msg.video?.mime_type || null;
+          break;
+        case 'audio':
+          mediaType = 'audio';
+          body = 'Audio message';
+          mediaId = msg.audio?.id || null;
+          mediaPath = msg.audio?.mime_type || null;
+          break;
+        case 'sticker':
+          mediaType = 'sticker';
+          body = 'Sticker';
+          mediaId = msg.sticker?.id || null;
+          break;
+        default:
+          mediaType = msg.type;
+          body = `Received ${msg.type}`;
       }
 
       return new WhatsappMessage({
-        id: message.id,
-        from: message.from,
-        timestamp: parseInt(message.timestamp) * 1000,
-        type: message.type,
-        body: body,
-        waBusinessAccountId: entry.id,
-        phoneNumberId: metadata.phone_number_id,
-        displayPhoneNumber: metadata.display_phone_number,
-        contactName: contact && contact.profile ? contact.profile.name : null,
-        contactWaId: contact ? contact.wa_id : null,
-        status: 'received',
-        createdAt: Date.now(),
-        startTime: null,
+        wamid: msg.id,
+        waBusinessId,
+        phoneNumberId,
+        displayPhoneNumber,
+
+        from: msg.from,
+        to: phoneNumberId,
+        type: msg.type,
+        body,
+        mediaType,
+        mediaId,
+        mediaPath,
+        timestamp: parseInt(msg.timestamp) * 1000,
+        direction: 'inbound',
+
+        clientWaId: contact.wa_id || null,
+        clientName: profile.name || null,
       });
-    } catch (error) {
-      console.error('Error parsing WhatsApp payload:', error);
-      return null;
     }
+
+    // Case: Status update
+    if (value.statuses?.length) {
+      const status = value.statuses[0];
+      return new WhatsappMessage({
+        wamid: status.id,
+        waBusinessId,
+        phoneNumberId,
+        displayPhoneNumber,
+
+        from: phoneNumberId,
+        to: status.recipient_id,
+        type: 'status',
+        body: null,
+        mediaType: null,
+        mediaId: null,
+        mediaPath: null,
+        timestamp: parseInt(status.timestamp) * 1000,
+        direction: 'outbound',
+
+        clientWaId: status.recipient_id,
+        status: status.status,
+        statusUpdatedAt: parseInt(status.timestamp) * 1000,
+      });
+    }
+
+    return null;
   }
 
-  /**
-   * Converts a WhatsappMessage to the format expected by ChatService
-   * @returns {Object} Data formatted for ChatService
-   */
-  toChatServiceFormat() {
+  toChatServiceAdapterPayload({
+    unreadCount = 0,
+    threadStatus = THREAD_STATUS.QUEUE,
+    firstResponseDatetime = null,
+    lastResponseDatetime = null,
+    currentHandlerUserId = null,
+    internalUserDetail = [],
+    threadCreatedAt = null,
+    threadUpdatedAt = null,
+    replyTo = null,
+    repliedBy = null,
+    chatCreatedAt = null,
+    chatUpdatedAt = null
+  } = {}) {
     return {
-      id: this.id,
-      chatId: this.chatId,
-      senderNumber: this.from,
-      recipientNumber: this.displayPhoneNumber,
-      contactName: this.contactName,
-      messageText: this.body,
-      waBusinessId: this.waBusinessAccountId,
-      status: this.status,
-      unread: this.unread,
+      waBusinessId: this.waBusinessId,
+      clientWaId: this.clientWaId,
+      clientName: this.clientName,
+      phoneNumberId: this.phoneNumberId,
       displayPhoneNumber: this.displayPhoneNumber,
-      createdAt: this.createdAt,
-      replyTo: this.replyTo,
-      repliedBy: this.repliedBy,
-      contactWaId: this.contactWaId,
-      endTime: this.endTime,
-      startTime: this.startTime,
-    }
-  }
+      unreadCount,
+      threadStatus,
+      firstResponseDatetime,
+      lastResponseDatetime,
+      currentHandlerUserId,
+      internalUserDetail,
+      threadCreatedAt,
+      threadUpdatedAt,
+  
+      wamid: this.wamid,
+      mediaId: this.mediaId,
+      mediaType: this.mediaType,
+      mediaPathName: this.mediaPath,
+      message: this.body,
+      unread: this.direction === 'inbound',
+      replyTo,
+      repliedBy,
+      chatCreatedAt: chatCreatedAt || Date.now(),
+      chatUpdatedAt: chatUpdatedAt || Date.now(),
+    };
+  }  
 }
 
 module.exports = WhatsappMessage;
