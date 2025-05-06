@@ -1,5 +1,6 @@
 const Chat = require('../../domain/entities/Chat');
 const Thread = require('../../domain/entities/Thread');
+const InternalUserDetail = require('../../domain/valueObjects/InternalUserDetail');
 
 const THREAD_STATUS = require('../../../shared/constants/chatStatus');
 
@@ -39,6 +40,11 @@ class SaveChatWithThread {
     let originalThread = null;
     let thread = null;
 
+    const rawInternalUserDetail = internalUserDetail ?? [];
+    const internalUserDetailObj = rawInternalUserDetail.map(item =>
+      item instanceof InternalUserDetail ? item : InternalUserDetail.fromJson(item)
+    );
+
     try {
       thread = await this.threadRepository.getByWhatsappInfo(waBusinessId, clientWaId);
 
@@ -58,7 +64,7 @@ class SaveChatWithThread {
           firstResponseDatetime: firstResponseDatetime ?? Date.now(),
           lastResponseDatetime: lastResponseDatetime ?? null,
           currentHandlerUserId: currentHandlerUserId ?? null,
-          internalUserDetail: internalUserDetail,
+          internalUserDetail: internalUserDetailObj,
           createdAt:  threadCreatedAt ?? Date.now(),
           updatedAt: threadUpdatedAt ?? Date.now(),
         });
