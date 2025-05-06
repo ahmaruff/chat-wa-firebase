@@ -1,15 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const config = require('../../../shared/utils/configs');
 
 const WhatsappController = require('../controllers/WhatsappController');
-const ChatServiceAdapter = require('../../services/ChatServiceAdapter');
-const ProcessWhatsappWebhook = require('../../application/usecase/ProcessWhatsappWebhook');
 
-// init
-const chatServiceAdapter = new ChatServiceAdapter();
-const processWhatsappWebhook = new ProcessWhatsappWebhook(chatServiceAdapter);
-const whatsappController = new WhatsappController(processWhatsappWebhook);
+const whatsappController = new WhatsappController();
 
 /**
  * @swagger
@@ -22,8 +16,8 @@ const whatsappController = new WhatsappController(processWhatsappWebhook);
  * @swagger
  * /whatsapp/webhook:
  *   get:
- *     summary: Verifikasi webhook WhatsApp
- *     description: Endpoint untuk verifikasi webhook WhatsApp Business API
+ *     summary: Verify WhatsApp webhook
+ *     description: Endpoint to verify the WhatsApp Business API webhook
  *     tags: [WhatsApp]
  *     parameters:
  *       - in: query
@@ -31,29 +25,29 @@ const whatsappController = new WhatsappController(processWhatsappWebhook);
  *         schema:
  *           type: string
  *         required: true
- *         description: Mode verifikasi (selalu 'subscribe')
+ *         description: Verification mode (always 'subscribe')
  *       - in: query
  *         name: hub.verify_token
  *         schema:
  *           type: string
  *         required: true
- *         description: Token verifikasi yang harus cocok dengan konfigurasi
+ *         description: Verification token that must match the configured token
  *       - in: query
  *         name: hub.challenge
  *         schema:
  *           type: string
  *         required: true
- *         description: Challenge string yang harus dikembalikan jika verifikasi berhasil
+ *         description: Challenge string to be returned if verification is successful
  *     responses:
  *       200:
- *         description: Webhook terverifikasi dengan sukses
+ *         description: Webhook successfully verified
  *         content:
  *           text/plain:
  *             schema:
  *               type: string
  *               description: Challenge string
  *       403:
- *         description: Verifikasi webhook gagal
+ *         description: Webhook verification failed
  */
 router.get('/webhook', (req, res) => whatsappController.webhookGet(req, res));
 
@@ -61,8 +55,8 @@ router.get('/webhook', (req, res) => whatsappController.webhookGet(req, res));
  * @swagger
  * /whatsapp/webhook:
  *   post:
- *     summary: Menerima notifikasi webhook WhatsApp
- *     description: Endpoint untuk menerima pesan dan notifikasi dari WhatsApp Business API
+ *     summary: Receive WhatsApp webhook notifications
+ *     description: Endpoint to receive messages and notifications from the WhatsApp Business API
  *     tags: [WhatsApp]
  *     requestBody:
  *       required: true
@@ -74,19 +68,19 @@ router.get('/webhook', (req, res) => whatsappController.webhookGet(req, res));
  *               object:
  *                 type: string
  *                 example: whatsapp_business_account
- *                 description: Tipe objek (selalu 'whatsapp_business_account')
+ *                 description: Object type (always 'whatsapp_business_account')
  *               entry:
  *                 type: array
- *                 description: Array data perubahan
+ *                 description: Array of changes data
  *                 items:
  *                   type: object
  *                   properties:
  *                     id:
  *                       type: string
- *                       description: ID WhatsApp Business Account
+ *                       description: WhatsApp Business Account ID
  *                     changes:
  *                       type: array
- *                       description: Array perubahan
+ *                       description: Array of changes
  *                       items:
  *                         type: object
  *                         properties:
@@ -138,7 +132,7 @@ router.get('/webhook', (req, res) => whatsappController.webhookGet(req, res));
  *                             example: messages
  *     responses:
  *       200:
- *         description: Webhook berhasil diproses
+ *         description: Webhook successfully processed
  *         content:
  *           application/json:
  *             schema:
@@ -146,17 +140,46 @@ router.get('/webhook', (req, res) => whatsappController.webhookGet(req, res));
  *               properties:
  *                 success:
  *                   type: boolean
+ *                   description: Webhook processing status
  *                 message:
  *                   type: string
+ *                   description: Status description
  *                 data:
  *                   type: object
  *                   properties:
- *                     from:
- *                       type: string
- *                     messageBody:
- *                       type: string
- *                     chatCreated:
- *                       type: boolean
+ *                     messagesProcessed:
+ *                       type: integer
+ *                       description: Number of messages processed
+ *                     results:
+ *                       type: array
+ *                       description: Results of message processing
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           type:
+ *                             type: string
+ *                             description: Message type (status or message)
+ *                           from:
+ *                             type: string
+ *                             description: Sender of the message
+ *                           status:
+ *                             type: string
+ *                             description: Message status (only for type 'status')
+ *                           messageBody:
+ *                             type: string
+ *                             description: Message body content (only for type 'message')
+ *                           chatCreated:
+ *                             type: boolean
+ *                             description: Indicates if a new chat was created (only for type 'message')
+ *                           markedAsRead:
+ *                             type: boolean
+ *                             description: Indicates if the message was marked as read (only for type 'status' with 'read' status)
+ *                           ignored:
+ *                             type: boolean
+ *                             description: Indicates if the message status was ignored
+ *                           error:
+ *                             type: string
+ *                             description: Error message (if any)
  */
 router.post('/webhook', (req, res) => whatsappController.webhookPost(req, res));
 

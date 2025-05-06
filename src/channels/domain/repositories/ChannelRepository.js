@@ -26,3 +26,5 @@ class ChannelRepository {
     throw new Error("Method delete() must be implemented"); 
   }
 }
+
+module.exports = ChannelRepository;

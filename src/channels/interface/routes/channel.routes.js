@@ -10,14 +10,14 @@ const channelController = new ChannelController(firestoreChannelRepository);
  * @swagger
  * tags:
  *   name: Channels
- *   description: Manajemen Channel & Whatsapp Channel
+ *   description: Channel Management API
  */
 
 /**
  * @swagger
  * /channels:
  *   post:
- *     summary: Create or update a Channel
+ *     summary: Create a new Channel
  *     tags: [Channels]
  *     requestBody:
  *       required: true
@@ -26,25 +26,77 @@ const channelController = new ChannelController(firestoreChannelRepository);
  *           schema:
  *             type: object
  *             required:
- *               - crmChannelId
+ *               - crm_channel_id
  *               - name
  *             properties:
- *               crmChannelId:
+ *               crm_channel_id:
  *                 type: string
  *                 example: "crm-001"
  *               name:
  *                 type: string
  *                 example: "Main Channel"
- *               isActive:
+ *               is_active:
  *                 type: boolean
  *                 example: true
  *     responses:
  *       201:
- *         description: Channel created
- *       200:
- *         description: Channel updated
+ *         description: Channel created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "SUCCESS"
+ *                 code:
+ *                   type: integer
+ *                   example: 201
+ *                 message:
+ *                   type: string
+ *                   example: "Create channel Success"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     channel:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                           example: "channel123"
+ *                         crmChannelId:
+ *                           type: string
+ *                           example: "crm-001"
+ *                         name:
+ *                           type: string
+ *                           example: "Main Channel"
+ *                         isActive:
+ *                           type: boolean
+ *                           example: true
+ *                         createdAt:
+ *                           type: number
+ *                           example: 1623674829000
+ *                         updatedAt:
+ *                           type: number
+ *                           example: 1623674829000
  *       500:
  *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "ERROR"
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: "Create channel failed: Error message"
+ *                 data:
+ *                   type: null
  */
 router.post('/', (req, res) => channelController.save(req, res));
 
@@ -61,151 +113,10 @@ router.post('/', (req, res) => channelController.save(req, res));
  *         schema:
  *           type: string
  *         example: "channel-123"
+ *         description: Channel ID
  *     responses:
  *       200:
- *         description: Channel detail
- *       404:
- *         description: Channel not found
- *       500:
- *         description: Server error
- */
-router.get('/:id', (req, res) => channelController.getChannel(req, res));
-
-/**
- * @swagger
- * /channels/add-whatsapp-channel:
- *   post:
- *     summary: Add a Whatsapp Channel to an existing Channel
- *     tags: [Channels]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - channelId
- *               - waBusinessId
- *               - phoneNumberId
- *             properties:
- *               channelId:
- *                 type: string
- *                 example: "channel-123"
- *               waBusinessId:
- *                 type: string
- *                 example: "waba-123"
- *               phoneNumberId:
- *                 type: string
- *                 example: "wa-phone-id-456"
- *               displayPhoneNumber:
- *                 type: string
- *                 example: "+6281234567890"
- *               name:
- *                 type: string
- *                 example: "Support Line"
- *               accessToken:
- *                 type: string
- *                 example: "EAAJZCZCx..."
- *               isActive:
- *                 type: boolean
- *                 example: true
- *               metadata:
- *                 type: object
- *                 example: { region: "Asia", department: "Support" }
- *               participants:
- *                 type: array
- *                 example: ["1", "2"]
- *     responses:
- *       200:
- *         description: Whatsapp channel added
- *       500:
- *         description: Server error
- */
-router.post('/add-whatsapp-channel', (req, res) => channelController.addWhatsAppChannel(req, res));
-
-/**
- * @swagger
- * /channels/find-by-phone:
- *   post:
- *     summary: Find Channel by Phone Number ID
- *     tags: [Channels]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - phoneNumberId
- *             properties:
- *               phoneNumberId:
- *                 type: string
- *                 example: "wa-phone-id-123"
- *     responses:
- *       200:
- *         description: Channel and WhatsappChannel found
- *       400:
- *         description: phoneNumberId required
- *       500:
- *         description: Server error
- */
-router.post('/find-by-phone', (req, res) => channelController.findByPhoneNumber(req, res));
-
-/**
- * @swagger
- * /channels/find-by-crm-channel:
- *   post:
- *     summary: Find Channel by CRM Channel ID
- *     tags: [Channels]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - crmChannelId
- *             properties:
- *               crmChannelId:
- *                 type: string
- *                 example: "crm-001"
- *     responses:
- *       200:
- *         description: Channel found
- *       400:
- *         description: crmChannelId required
- *       404:
- *         description: Channel not found
- */
-router.post('/find-by-crm-channel', (req, res) => channelController.findByCrmChannelId(req, res));
-
-
-/**
- * @swagger
- * /channels/find-by-participant:
- *   post:
- *     summary: Find Channel and WhatsApp Channel by Participant ID
- *     description: Retrieve a channel and its WhatsApp channels that a specific participant is involved in.
- *     operationId: findByParticipantId
- *     tags: [Channels]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               channelId:
- *                 type: string
- *                 description: The unique identifier for the channel.
- *                 example: "12345"
- *               participantId:
- *                 type: string
- *                 description: The unique participant ID to search for.
- *                 example: "user123"
- *     responses:
- *       '200':
- *         description: Successfully retrieved the channel and WhatsApp channels
+ *         description: Channel retrieved successfully
  *         content:
  *           application/json:
  *             schema:
@@ -219,23 +130,22 @@ router.post('/find-by-crm-channel', (req, res) => channelController.findByCrmCha
  *                   example: 200
  *                 message:
  *                   type: string
- *                   example: "get channel by participant Id success"
+ *                   example: "Get channel success"
  *                 data:
  *                   type: object
  *                   properties:
  *                     channel:
  *                       type: object
- *                       description: The Channel object.
  *                       properties:
  *                         id:
  *                           type: string
  *                           example: "channel123"
  *                         crmChannelId:
  *                           type: string
- *                           example: "crm_channel_1"
+ *                           example: "crm-001"
  *                         name:
  *                           type: string
- *                           example: "Channel 1"
+ *                           example: "Main Channel"
  *                         isActive:
  *                           type: boolean
  *                           example: true
@@ -245,56 +155,8 @@ router.post('/find-by-crm-channel', (req, res) => channelController.findByCrmCha
  *                         updatedAt:
  *                           type: number
  *                           example: 1623674829000
- *                     wa_channel:
- *                       type: object
- *                       description: A map of WhatsApp channels the participant is involved in, keyed by `wabaId`.
- *                       additionalProperties:
- *                         type: object
- *                         properties:
- *                           id:
- *                             type: string
- *                             example: "waba_123"
- *                           phoneNumberId:
- *                             type: string
- *                             example: "phone_123"
- *                           displayPhoneNumber:
- *                             type: string
- *                             example: "6285117136246"
- *                           name:
- *                             type: string
- *                             example: "WhatsApp Channel 1"
- *                           isActive:
- *                             type: boolean
- *                             example: true
- *                           participants:
- *                             type: array
- *                             items:
- *                               type: string
- *                             example: ["user1", "user2"]
- *                           createdAt:
- *                             type: number
- *                             example: 1623674829000
- *                           updatedAt:
- *                             type: number
- *                             example: 1623674829000
- *       '404':
- *         description: Wa channel not found for the given participant
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: "FAIL"
- *                 code:
- *                   type: integer
- *                   example: 404
- *                 message:
- *                   type: string
- *                   example: "wa channel not found"
- *       '500':
- *         description: Server error when retrieving the data
+ *       404:
+ *         description: Channel not found
  *         content:
  *           application/json:
  *             schema:
@@ -305,11 +167,111 @@ router.post('/find-by-crm-channel', (req, res) => channelController.findByCrmCha
  *                   example: "ERROR"
  *                 code:
  *                   type: integer
- *                   example: 500
+ *                   example: 404
  *                 message:
  *                   type: string
- *                   example: "Controller - Find By participant id Failed: <error message>"
+ *                   example: "Channel not found"
+ *                 data:
+ *                   type: null
  */
-router.post('/find-by-participant', (req, res) => channelController.findByParticipantId(req, res));
+router.get('/:id', (req, res) => channelController.getById(req, res));
+
+/**
+ * @swagger
+ * /channels/get-by-crm-channel:
+ *   post:
+ *     summary: Find Channel by CRM Channel ID
+ *     tags: [Channels]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - crm_channel_id
+ *             properties:
+ *               crm_channel_id:
+ *                 type: string
+ *                 example: "crm-001"
+ *     responses:
+ *       200:
+ *         description: Channel found successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "SUCCESS"
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "get channel by crmChannel Id success"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     channel:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                           example: "channel123"
+ *                         crmChannelId:
+ *                           type: string
+ *                           example: "crm-001"
+ *                         name:
+ *                           type: string
+ *                           example: "Main Channel"
+ *                         isActive:
+ *                           type: boolean
+ *                           example: true
+ *                         createdAt:
+ *                           type: number
+ *                           example: 1623674829000
+ *                         updatedAt:
+ *                           type: number
+ *                           example: 1623674829000
+ *       400:
+ *         description: CRM Channel ID is required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "ERROR"
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: "Error: crm_channel_id required"
+ *                 data:
+ *                   type: null
+ *       404:
+ *         description: Channel not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "ERROR"
+ *                 code:
+ *                   type: integer
+ *                   example: 404
+ *                 message:
+ *                   type: string
+ *                   example: "Channel not found"
+ *                 data:
+ *                   type: null
+ */
+router.post('/get-by-crm-channel', (req, res) => channelController.getByCrmChannelId(req, res));
 
 module.exports = router;

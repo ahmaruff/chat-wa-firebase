@@ -1,13 +1,30 @@
 const Channel = require('../domain/entities/Channel');
+const ChannelRepository = require('../domain/repositories/ChannelRepository');
+
 const config = require('../../shared/utils/configs');
 const admin = require('../../shared/utils/firebase');
 
 const CHANNEL_COLLECTION = config.firebase.channel_collection || 'channels_dev';
 
-class FirestoreChannelRepository {
+class FirestoreChannelRepository extends ChannelRepository {
   constructor() {
+    super();
     this.db = admin.firestore();
     this.collection = this.db.collection(CHANNEL_COLLECTION);
+  }
+
+  // Helper method to convert Firestore document to Chat entity
+  _documentToEntity(doc) {
+    if (!doc || !doc.exists) {
+      return null;
+    }
+    
+    const data = doc.data();
+    if (!data) {
+      return null;
+    }
+        
+    return Channel.fromFirestore(doc);
   }
 
   /**
@@ -21,26 +38,31 @@ class FirestoreChannelRepository {
     }
 
     try {
-      const data = channel.toJSON();
-      data.updatedAt = Date.now();
+      const timestamp = Date.now();
+
+      const data = channel.toJson();
+      data.updated_at = timestamp;
 
       let docRef;
       if (channel.id) {
         // Update existing document
         docRef = this.collection.doc(channel.id);
-        await docRef.update(data);
+        await docRef.update(data);        
+        console.log(`Updated channel with ID: ${channel.id}`);
         
         const updatedDoc = await docRef.get();
-        return Channel.fromFirestore(updatedDoc);
+        return this._documentToEntity(updatedDoc);
       } else {
         // Create new document
-        docRef = this.collection.doc(); // generate ID dulu
+        docRef = this.collection.doc();
         data.id = docRef.id;  
-        data.createdAt = Date.now();
+        data.created_at = timestamp;
+        data.updated_at = timestamp;
         await docRef.set(data);
+        console.log(`Created new entity with ID: ${data.id}`);
 
         const snapshot = await docRef.get();
-        return Channel.fromFirestore(snapshot);
+        return this._documentToEntity(snapshot);
       }
     } catch (error) {
       console.error('Error saving Channel:', error);
@@ -60,8 +82,7 @@ class FirestoreChannelRepository {
         return null;
       }
 
-      const channel = Channel.fromFirestore(doc);
-      return channel;
+      return this._documentToEntity(doc);
     } catch (error) {
       console.error('Error getting Channel by ID:', error);
       throw error;
@@ -85,8 +106,7 @@ class FirestoreChannelRepository {
       }
 
       const doc = snapshot.docs[0];
-      const channel = Channel.fromFirestore(doc);
-      return channel;
+      return this._documentToEntity(doc);
     } catch (error) {
       console.error('Error getting Channel by CRM Channel ID:', error);
       throw error;
@@ -100,7 +120,7 @@ class FirestoreChannelRepository {
   async getAll() {
     try {
       const snapshot = await this.collection.get();
-      return snapshot.docs.map(doc => Channel.fromFirestore(doc));
+      return snapshot.docs.map(doc => this._documentToEntity(doc));
     } catch (error) {
       console.error('Error getting all Channels:', error);
       throw error;
@@ -114,10 +134,10 @@ class FirestoreChannelRepository {
   async getAllActive() {
     try {
       const snapshot = await this.collection
-        .where('isActive', '==', true)
+        .where('is_active', '==', true)
         .get();
 
-      return snapshot.docs.map(doc => Channel.fromFirestore(doc));
+      return snapshot.docs.map(doc => this._documentToEntity(doc));
     } catch (error) {
       console.error('Error getting active Channels:', error);
       throw error;

@@ -2,7 +2,6 @@ const admin = require('../../shared/utils/firebase');
 const ChatRepository = require('../domain/repositories/ChatRepository');
 const config = require('../../shared/utils/configs');
 const Chat = require('../domain/entities/Chat');
-const MessageContent = require('../domain/valueObjects/MessageContent');
 
 const FIREBASE_CHAT_COLLECTION = config.firebase.chat_collection || 'wa_chat_test';
 
@@ -40,7 +39,7 @@ class FirestoreChatRepository extends ChatRepository {
   async getByThreadId(threadId) {
     try {
       const querySnapshot = await this.chatCollection
-        .where('thread', '==', threadId)
+        .where('thread_id', '==', threadId)
         .orderBy('created_at', 'asc')
         .get();
 
@@ -52,39 +51,42 @@ class FirestoreChatRepository extends ChatRepository {
   }
 
   async save(chat) {
+    if (!(chat instanceof Chat)) {
+      throw new Error('Invalid Chat object');
+    }
+
+    if (!chat.threadId) {
+      throw new Error('Error: Thread ID cannot be null');
+    }
+
     try {
-      if (!chat.thread) {
-        throw new Error('Error: Thread cannot be null');
-      }
-  
-      let chatDocRef;
-  
-      if (chat.id) {
-        chatDocRef = this.chatCollection.doc(chat.id);
-      } else {
-        chatDocRef = this.chatCollection.doc();
-        chat.id = chatDocRef.id;
-      }
-  
       const timestamp = Date.now();
-      const existing = await this.getById(chat.id);
-  
-      const chatData = {
-        id: chat.id,
-        sender: chat.sender,
-        thread: chat.thread,
-        message: chat.messageContent.getValue(),
-        unread: chat.unread ?? true,
-        created_at: existing ? existing.created_at : timestamp,
-        chat_id: chat.chatId,
-        reply_to: chat.replyTo || null,
-        replied_by: chat.repliedBy || null,
-      };
-  
-      await chatDocRef.set(chatData, { merge: true });
-  
-      const savedChatDoc = await chatDocRef.get();
-      return this._documentToEntity(savedChatDoc);
+
+      const dataChat = chat.toJson();
+      let chatDocRef;
+
+      if(chat.id) {
+        // Update existing document
+        dataChat.updated_at = timestamp;
+        chatDocRef = this.chatCollection.doc(chat.id);
+
+        await chatDocRef.update(dataChat);        
+        console.log(`Updated chat with ID: ${chat.id}`);
+        const updatedDoc = await docRef.get();
+        return this._documentToEntity(updatedDoc);
+      } else {
+        // create new doc
+        chatDocRef = this.chatCollection.doc();
+        dataChat.id = chatDocRef.id;
+        dataChat.created_at = timestamp;
+        dataChat.updated_at = timestamp;
+
+        await chatDocRef.set(dataChat);
+        console.log(`Created new entity with ID: ${dataChat.id}`);
+
+        const snapshot = await docRef.get();
+        return this._documentToEntity(snapshot);
+      }
     } catch (error) {
       console.error('Error saving chat to Firestore:', error);
       throw error;
@@ -93,8 +95,10 @@ class FirestoreChatRepository extends ChatRepository {
 
   async markAsRead(chatId) {
     try {
+      const timestamp = Date.now();
+
       const chatRef = this.chatCollection.doc(chatId);
-      await chatRef.update({ unread: false });
+      await chatRef.update({ unread: false, updated_at: timestamp });
       return true;
     } catch (error) {
       console.error('Error marking chat as read:', error);
@@ -102,8 +106,34 @@ class FirestoreChatRepository extends ChatRepository {
     }
   }
 
+  async markAsReadByWamid(wamid) {
+    try {
+      const timestamp = Date.now();
+
+      const querySnapshot = await this.chatCollection
+        .where('wamid', '==', wamid)
+        .orderBy('created_at', 'desc')
+        .limit(1)
+        .get();
+  
+      if (querySnapshot.empty) {
+        console.warn(`No chat found with wamid: ${wamid}`);
+        return false;
+      }
+  
+      const chatDoc = querySnapshot.docs[0];
+      await chatDoc.ref.update({ unread: false, updated_at: timestamp });
+      return true;
+    } catch (error) {
+      console.error('Error marking chat as read:', error);
+      throw error;
+    }
+  }  
+
   async markThreadAsRead(threadId) {
     try {
+      const timestamp = Date.now();
+
       const batch = this.db.batch();
       const unreadChats = await this.chatCollection
         .where('thread', '==', threadId)
@@ -111,7 +141,7 @@ class FirestoreChatRepository extends ChatRepository {
         .get();
       
       unreadChats.forEach(doc => {
-        batch.update(doc.ref, { unread: false });
+        batch.update(doc.ref, { unread: false, updated_at: timestamp });
       });
       
       await batch.commit();

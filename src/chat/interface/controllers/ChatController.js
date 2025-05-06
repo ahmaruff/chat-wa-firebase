@@ -1,11 +1,6 @@
-const SaveChatMessage = require('../../application/usecase/SaveChatMessage');
-const FindThreadByWaInfo = require('../../application/usecase/FindThreadByWaInfo');
-const FindThreadById = require('../../application/usecase/FindThreadById');
-const SaveThread = require('../../application/usecase/SaveThread');
+const ManageThread = require('../../application/usecase/ManageThread');
+const ManageChat = require('../../application/usecase/ManageChat');
 const SaveChatWithThread = require('../../application/usecase/SaveChatWithThread');
-
-const ChatRepository = require('../../domain/repositories/ChatRepository');
-const ThreadRepository = require('../../domain/repositories/ThreadRepository');
 
 const THREAD_STATUS = require('../../../shared/constants/chatStatus');
 const STATUS = require('../../../shared/constants/statusCodes');
@@ -20,77 +15,334 @@ class ChatController {
   constructor(threadRepository, chatRepository) {
     this.threadRepository = threadRepository;
     this.chatRepository = chatRepository;
-    this.saveChatMessage = new SaveChatMessage(chatRepository);
-    this.findThreadByWaInfo = new FindThreadByWaInfo(threadRepository);
-    this.findThreadById = new FindThreadById(threadRepository);
-    this.saveThread = new SaveThread(threadRepository);
+    this.manageChat = new ManageChat(this.chatRepository);
+    this.manageThread = new ManageThread(this.threadRepository);
     this.saveChatWithThread = new SaveChatWithThread(threadRepository, chatRepository);
     this.channelServiceAdapter = new ChannelServiceAdapter();
     this.whatsAppServiceAdapter = new WhatsAppServiceAdapter(); 
   }
 
   async save(req, res) {
-    const { waBusinessId, recipientNumber, messageText, contactName, repliedBy, replyTo, chatId = null, contactWaId = null, status = null, endTime } = req.body;
-
-    const waChannelResult = await this.channelServiceAdapter.getWhatsappChannel(waBusinessId);
-
-    if(!waChannelResult) {
-      console.warn(`Unknown WABA ID: ${waBusinessId} — ignoring message`);
-      return res.status(400).json(responseFormatter(STATUS.FAIL, 400, `Unknown WABA ID: ${waBusinessId} — ignoring message`, null));      
-    }
-
-    const waChannel = waChannelResult.whatsappChannel;
-    const wabaId = waChannelResult.whatsAppBusinessId;
-    const senderNumber = waChannel.displayPhoneNumber;
-
     try {
-      const waApiRes = await this.whatsAppServiceAdapter.sendToWhatsapApi({
-        waBusinessId: wabaId,
-        recipientNumber: recipientNumber,
-        messageText: messageText,
-      });
-      // const waApiRes = await  this.sendMessage.send({
-      //   waBusinessId: whatsappMessage.waBusinessAccountId,
-      //   recipientNumber: whatsappMessage.phoneNumberId,
-      //   messageText: whatsappMessage.body
-      // });
+      const {
+        wa_business_id,
+        phone_number_id,
+        display_phone_number,
+        client_wa_id,
+        client_name,
+        unread_count,
+        thread_status,
+        first_response_datetime,
+        last_response_datetime,
+        current_handler_user_id,
+        internal_user_detail,
+        thread_created_at,
+        thread_updated_at,
+        wamid,
+        media_id,
+        media_type,
+        media_path_name,
+        message,
+        unread,
+        reply_to,
+        replied_by,
+        chat_created_at,
+        chat_updated_at,
+      } = req.body;
+  
+      const waConfig = await this.channelServiceAdapter.getWaConfigByWaBusinessId(wa_business_id);
+  
+      if(!waConfig) {
+        console.error(`Unknown waBusinessId: ${wa_business_id} — ignoring message`);
+        return res.status(400).json(responseFormatter(STATUS.FAIL, 400, `Unknown waBusinessId: ${wa_business_id} — ignoring message`, null));      
+      }
+  
+      const timestamp = Date.now();
+      
+      let resWaApi;
+      // Check if there's a media file from multer middleware
+      if (req.file && req.file.path) {
+        // This is a media message
+        resWaApi = await this.whatsAppServiceAdapter.sendMediaToWhatsapApi({
+          waBusinessId: wa_business_id ?? waConfig.waBusinessId,
+          clientWaId: client_wa_id,
+          mediaFile: req.file,
+          mediaType: media_type || this._determineMediaTypeFromFile(req.file),
+          caption: message || '' // Use message as caption if provided
+        });
+      } else {
+        // This is a text message
+        resWaApi = await this.whatsAppServiceAdapter.sendToWhatsapApi({
+          waBusinessId: wa_business_id ?? waConfig.waBusinessId, 
+          clientWaId: client_wa_id, 
+          messageText: message
+        });
+      }
 
-      console.log('wa response: ', waApiRes);
+      // If resWaApi failed, throw an error
+      if (!resWaApi || !resWaApi.success) {
+        console.error('Failed to send message to WhatsApp API:', resWaApi);
+        throw new Error('Failed to send message to WhatsApp API');
+      }
+
+      // Update media_id if it was returned from the WhatsApp API
+      const updatedMediaId = (resWaApi.mediaId) ? resWaApi.mediaId : media_id;
       
-      
+      // Save chat with thread
       const result = await this.saveChatWithThread.execute({
-        id: null,
-        chatId: chatId,
-        repliedBy: repliedBy || null,
-        replyTo: replyTo || null,
-        waBusinessId: wabaId,
-        recipientNumber: recipientNumber,
-        displayPhoneNumber: senderNumber,
-        messageText: messageText,
-        contactName: contactName || 'Unknown',
-        sender: senderNumber,
-        unread: true,
-        contactWaId: contactWaId,
-        createdAt: Date.now(),
-        status: status,
-        endTime: endTime || null
+        waBusinessId: wa_business_id ?? waConfig.waBusinessId,
+        clientWaId: client_wa_id,
+        clientName: client_name,
+        phoneNumberId: phone_number_id,
+        displayPhoneNumber: display_phone_number,
+        unreadCount: unread_count,
+        threadStatus: thread_status,
+        firstResponseDatetime: first_response_datetime ?? timestamp,
+        lastResponseDatetime: last_response_datetime ?? null,
+        currentHandlerUserId: current_handler_user_id ?? null,
+        internalUserDetail: internal_user_detail ?? [],
+        threadCreatedAt: thread_created_at ?? timestamp,
+        threadUpdatedAt: thread_updated_at ?? timestamp,
+        wamid: wamid ?? (resWaApi.result?.messages && resWaApi.result.messages[0]?.id) ?? null,
+        mediaId: updatedMediaId ?? null,
+        mediaType: media_type ?? (req.file ? this._determineMediaTypeFromFile(req.file) : null),
+        mediaPathName: media_path_name ?? (req.file ? req.file.path : null),
+        message: message,
+        unread: unread,
+        replyTo: reply_to ?? null,
+        repliedBy: replied_by ?? null,
+        chatCreatedAt: chat_created_at ?? timestamp,
+        chatUpdatedAt: chat_updated_at ?? timestamp,
       });
-      
-      res.status(200).json(
+  
+      return res.status(200).json(
         responseFormatter(
           STATUS.SUCCESS, 
           200, 
           'Chat saved successfully', 
           {
-            chat_id: result.chatId,
-            thread_id: result.threadId,
-            is_new_thread: result.isNewThread
+            chat_id: result.chat.id,
+            wamid: result.chat.wamid,
+            thread_id: result.thread.id,
+            is_new_thread: result.isNewThread,
+            media_id: updatedMediaId
           }
         )
       );
+      
     } catch (error) {
       console.error('Error saving chat:', error);
-      res.status(500).json(responseFormatter(STATUS.ERROR, 500, 'Failed to save chat', null));
+      return res.status(500).json(responseFormatter(STATUS.ERROR, 500, error.message, null));
+    }
+  }
+  
+  /**
+   * Determine media type from file mimetype
+   * @param {Object} file - File object from multer
+   * @returns {string} - WhatsApp media type
+   * @private
+   */
+  _determineMediaTypeFromFile(file) {
+    const mimetype = file.mimetype;
+    
+    if (mimetype.startsWith('image/')) {
+      return mimetype === 'image/webp' ? 'sticker' : 'image';
+    } else if (mimetype.startsWith('video/')) {
+      return 'video';
+    } else if (mimetype.startsWith('audio/')) {
+      return 'audio';
+    } else {
+      return 'document';
+    }
+  }
+  
+  /**
+   * Send a media message via WhatsApp
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   */
+  async sendMedia(req, res) {
+    try {
+      const { wa_business_id, client_wa_id, media_type, caption } = req.body;
+      
+      // Check if there's a file upload
+      if (!req.file) {
+        return res.status(400).json(
+          responseFormatter(STATUS.FAIL, 400, 'No media file uploaded', null)
+        );
+      }
+      
+      const waConfig = await this.channelServiceAdapter.getWaConfigByWaBusinessId(wa_business_id);
+      
+      if(!waConfig) {
+        console.error(`Unknown waBusinessId: ${wa_business_id} — ignoring message`);
+        return res.status(400).json(
+          responseFormatter(STATUS.FAIL, 400, `Unknown waBusinessId: ${wa_business_id} — ignoring message`, null)
+        );      
+      }
+      
+      // Determine media type if not provided
+      const determinedMediaType = media_type || this._determineMediaTypeFromFile(req.file);
+      
+      // Send media message
+      const result = await this.whatsAppServiceAdapter.sendMediaToWhatsapApi({
+        waBusinessId: wa_business_id,
+        clientWaId: client_wa_id,
+        mediaFile: req.file,
+        mediaType: determinedMediaType,
+        caption: caption || ''
+      });
+      
+      if (!result || !result.success) {
+        throw new Error('Failed to send media message to WhatsApp API');
+      }
+      
+      return res.status(200).json(
+        responseFormatter(
+          STATUS.SUCCESS,
+          200,
+          'Media message sent successfully',
+          {
+            media_id: result.mediaId,
+            wamid: result.result?.messages && result.result.messages[0]?.id
+          }
+        )
+      );
+      
+    } catch (error) {
+      console.error('Error sending media message:', error);
+      return res.status(500).json(
+        responseFormatter(STATUS.ERROR, 500, error.message, null)
+      );
+    }
+  }
+
+  /**
+   * Get media information with proxy URL
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   */
+  async getMediaInfo(req, res) {
+    try {
+      const { mediaId } = req.params;
+      const { wa_business_id } = req.query;
+
+      // Validate required parameters
+      if (!mediaId || !wa_business_id) {
+        return res.status(400).json(
+          responseFormatter(STATUS.FAIL, 400, 'Missing required parameters: mediaId, wa_business_id', null)
+        );
+      }
+
+      const waConfig = await this.channelServiceAdapter.getWaConfigByWaBusinessId(wa_business_id);
+
+      if (!waConfig) {
+        console.error(`Unknown waBusinessId: ${wa_business_id} — ignoring request`);
+        return res.status(400).json(
+          responseFormatter(STATUS.FAIL, 400, `Unknown waBusinessId: ${wa_business_id} — ignoring request`, null)
+        );
+      }
+
+      // Generate base URL for proxy
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+      // Get media info using the adapter
+      const mediaInfo = await this.whatsAppServiceAdapter.getMediaInfo({
+        waBusinessId: wa_business_id,
+        mediaId,
+        baseUrl
+      });
+
+      // Set cache headers for better performance
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+
+      return res.status(200).json(
+        responseFormatter(
+          STATUS.SUCCESS,
+          200,
+          'Media info retrieved successfully',
+          mediaInfo
+        )
+      );
+    } catch (error) {
+      console.error('Error getting media info:', error);
+
+      // Handle specific error cases
+      if (error.message.includes('Unknown waBusinessId')) {
+        return res.status(400).json(
+          responseFormatter(STATUS.FAIL, 400, error.message, null)
+        );
+      }
+
+      if (error.message.includes('Media URL not found')) {
+        return res.status(404).json(
+          responseFormatter(STATUS.FAIL, 404, error.message, null)
+        );
+      }
+
+      return res.status(500).json(
+        responseFormatter(STATUS.ERROR, 500, error.message, null)
+      );
+    }
+  }
+
+  /**
+   * Stream media content to client
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   */
+  async proxyMedia(req, res) {
+    try {
+      const { mediaId } = req.params;
+      const { wa_business_id } = req.query;
+
+      // Validate required parameters
+      if (!mediaId || !wa_business_id) {
+        return res.status(400).json(
+          responseFormatter(STATUS.FAIL, 400, 'Missing required parameters: mediaId, wa_business_id', null)
+        );
+      }
+
+      const waConfig = await this.channelServiceAdapter.getWaConfigByWaBusinessId(wa_business_id);
+
+      if (!waConfig) {
+        console.error(`Unknown waBusinessId: ${wa_business_id} — ignoring request`);
+        return res.status(400).json(
+          responseFormatter(STATUS.FAIL, 400, `Unknown waBusinessId: ${wa_business_id} — ignoring request`, null)
+        );
+      }
+
+      // Stream media directly to response using the adapter
+      await this.whatsAppServiceAdapter.streamMedia({
+        waBusinessId: wa_business_id,
+        mediaId,
+        responseStream: res
+      });
+
+      // The response is handled by the streaming process
+      // No need to return anything here as the stream handles the response
+    } catch (error) {
+      console.error('Error proxying media:', error);
+
+      // Handle specific error cases
+      if (error.message.includes('Unknown waBusinessId')) {
+        return res.status(400).json(
+          responseFormatter(STATUS.FAIL, 400, error.message, null)
+        );
+      }
+
+      if (error.message.includes('Media URL not found')) {
+        return res.status(404).json(
+          responseFormatter(STATUS.FAIL, 404, error.message, null)
+        );
+      }
+
+      // Don't send headers if they're already sent by the streaming process
+      if (!res.headersSent) {
+        return res.status(500).json(
+          responseFormatter(STATUS.ERROR, 500, error.message, null)
+        );
+      }
     }
   }
 }

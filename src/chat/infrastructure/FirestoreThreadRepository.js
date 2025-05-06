@@ -15,34 +15,51 @@ class FirestoreThreadRepository extends ThreadRepository {
 
   _documentToEntity(doc) {
     if (!doc.exists) return null;
-    
-    const data = doc.data();
-
     return Thread.fromFirestore(doc);
   }
 
   async save(thread) {
+    if(!(thread instanceof Thread)) {
+      throw new Error('Invalid Thread object');
+    }
+
+    if(!thread.clientWaId) {
+      throw new Error("clientWaId is required");
+    }
+
+    if(!thread.waBusinessId) {
+      throw new Error("waBusinessId is required");
+    }
+
+    if(!thread.phoneNumberId) {
+      throw new Error("phoneNumberId is required");
+    }
+
     try {
-      // const timestamp = admin.firestore.FieldValue.serverTimestamp();
       const timestamp = Date.now();
-      const existingThread = await this.getByWhatsappInfo(thread.waBusinessId, thread.contactWaId);
+
+      let threadDocRef;
+  
+      if (thread.id) {
+        threadDocRef = this.threadCollection.doc(thread.id);
+      } else {
+        threadDocRef = this.threadCollection.doc();
+        thread.id = threadDocRef.id;
+      }
+
+      // const timestamp = admin.firestore.FieldValue.serverTimestamp();
+      const existingThread = await this.getByWhatsappInfo(thread.waBusinessId, thread.clientWaId);
   
       let threadRef;
       let savedThread;
 
       // Convert Thread entity to Firestore document data
-      const threadData = {
-        wa_business_id: thread.waBusinessId,
-        contact_name: thread.contactName,
-        contact_wa_id: thread.contactWaId,
-        display_phone_number: thread.displayPhoneNumber,
-        start_time: thread.startTime || timestamp,
-        end_time: thread.endTime || null,
-        last_message: thread.lastMessage,
-        last_updated: thread.lastUpdated || timestamp,
-        status: thread.status || THREAD_STATUS.QUEUE
-      };
+      // ngikutin entity thread
 
+      const threadData = thread.toJson();
+      threadData.status = thread.status ?? THREAD_STATUS.QUEUE;
+      threadData.updated_at = timestamp;
+      
       if (existingThread) {
         if (existingThread.status === THREAD_STATUS.COMPLETED) {
           // If the thread is completed (status 2), create a new thread
@@ -63,6 +80,8 @@ class FirestoreThreadRepository extends ThreadRepository {
       } else {
         threadRef = this.threadCollection.doc();
         threadData.id = threadRef.id;
+        threadData.created_at = timestamp;
+        
         await threadRef.set(threadData);
         const newThreadDoc = await threadRef.get();
         savedThread = this._documentToEntity(newThreadDoc);
@@ -100,15 +119,16 @@ class FirestoreThreadRepository extends ThreadRepository {
     }
   }
 
-  async getByWhatsappInfo(waBusinessId, contactWaId){
-    if (!waBusinessId || !contactWaId) {
-      console.warn('Missing waBusinessId or contactWaId:', { waBusinessId, contactWaId });
+  async getByWhatsappInfo(waBusinessId, clientWaId){
+    if (!waBusinessId || !clientWaId) {
+      console.warn('Missing waBusinessId or clientWaId:', { waBusinessId, clientWaId });
       return null;
     }
+    
     try {
       const existingThreadQuery = await this.threadCollection
         .where('wa_business_id', '==', waBusinessId)
-        .where('contact_wa_id', '==', contactWaId)
+        .where('client_wa_id', '==', clientWaId)
         .limit(1)
         .get();
 

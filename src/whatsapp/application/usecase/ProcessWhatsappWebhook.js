@@ -1,49 +1,83 @@
 const WhatsappMessage = require('../../domain/entities/WhatsappMessage');
 const config = require('../../../shared/utils/configs');
 const ChannelServiceAdapter = require('../../services/ChannelServiceAdapter');
+const ChatServiceAdapter = require('../../services/ChatServiceAdapter');
 class ProcessWhatsappWebhook {
-  constructor(chatServiceAdapter) {
-    this.chatServiceAdapter = chatServiceAdapter;
+  constructor() {
+    this.chatServiceAdapter = new ChatServiceAdapter();
     this.channelServiceAdapter = new ChannelServiceAdapter();
   }
 
   /**
-   * Memproses payload webhook dari WhatsApp
-   * @param {Object} payload - Payload webhook WhatsApp
-   * @returns {Promise<Object>} - Hasil pemrosesan
-   */
+ * Memproses payload webhook dari WhatsApp
+ * @param {Object} payload - Payload webhook WhatsApp
+ * @returns {Promise<Object>} - Hasil pemrosesan
+ */
   async execute(payload) {
     try {
-      if (!payload || !payload.object || payload.object !== 'whatsapp_business_account') {
+      if (!payload || payload.object !== 'whatsapp_business_account') {
         console.log('Invalid payload or not from WhatsApp Business:', payload);
         throw new Error('Invalid webhook payload');
       }
 
-      const whatsappMessage = await this.handlePayload(payload);
-      
-      if (!whatsappMessage) {
+      const whatsappMessages = WhatsappMessage.fromPayload(payload);
+
+      if (!Array.isArray(whatsappMessages) || whatsappMessages.length === 0) {
         return {
           success: false,
           payload: payload,
-        }
+          reason: 'No valid messages in payload',
+        };
       }
 
-      if(whatsappMessage == null) {
-        return {
-          success: false,
-          payload: payload,
-        }
-      }
+      const results = [];
 
-      console.log(`Received WhatsApp message: ${whatsappMessage.body} from ${whatsappMessage.from}`);
+      for (const msg of whatsappMessages) {
+        try {
+          console.log(`Processing message type: ${msg.type}, from: ${msg.from}`);
       
-      const chatResult = await this.chatServiceAdapter.createChatFromWhatsApp(whatsappMessage);
-      
+          if (msg.type === 'status') {
+            // Only mark as read if status is 'read'
+            if (msg.status === 'read') {
+              const res = await this.chatServiceAdapter.markAsRead(msg.wamid);
+              results.push({
+                type: 'status',
+                status: msg.status,
+                from: msg.from,
+                result: res,
+              });
+            } else {
+              console.log(`Ignoring status: ${msg.status} for message ${msg.wamid}`);
+              results.push({
+                type: 'status',
+                status: msg.status,
+                from: msg.from,
+                result: 'ignored',
+              });
+            }
+          } else {
+            const chatResult = await this.chatServiceAdapter.createChatFromWhatsApp(msg);
+            results.push({
+              type: 'message',
+              from: msg.from,
+              messageBody: msg.body,
+              result: chatResult,
+            });
+          }
+        } catch (err) {
+          console.error('Error handling message:', msg, err);
+          results.push({
+            type: msg.type,
+            from: msg.from,
+            error: err.message,
+          });
+        }
+      }      
+
       return {
         success: true,
-        from: whatsappMessage.from,
-        messageBody: whatsappMessage.body,
-        chatResult: chatResult
+        messagesProcessed: results.length,
+        results,
       };
     } catch (error) {
       console.error('Error processing WhatsApp webhook:', error);
@@ -71,73 +105,6 @@ class ProcessWhatsappWebhook {
     }
     
     throw new Error('Missing parameters for webhook verification');
-  }
-
-  async handlePayload(payload){
-    try {
-      if (!payload || !payload.object || !payload.entry || !payload.entry.length) {
-        console.error('Invalid WhatsApp payload structure');
-        return null;
-      }
-
-      const entry = payload.entry[0];
-      const change = entry.changes[0];
-      
-      if (!change || !change.value || !change.value.messages || !change.value.messages.length) {
-        console.error('No messages in WhatsApp payload');
-        return null;
-      }
-
-      const metadata = change.value.metadata;
-      const message = change.value.messages[0];
-      const contact = change.value.contacts && change.value.contacts.length ? 
-                      change.value.contacts[0] : null;
-
-      // Extract message body based on message type
-      let body = null;
-      if (message.type === 'text' && message.text) {
-        body = message.text.body;
-      } else if (message.type === 'image' && message.image) {
-        body = message.image.caption || 'Image received';
-      } else if (message.type === 'document' && message.document) {
-        body = message.document.caption || 'Document received';
-      } else if (message.type === 'audio' && message.audio) {
-        body = 'Audio received';
-      } else if (message.type === 'video' && message.video) {
-        body = message.video.caption || 'Video received';
-      } else {
-        body = `Message of type ${message.type} received`;
-      }
-
-      const waChannelResult = await this.channelServiceAdapter.getWhatsappChannelByPhoneNumberId(metadata.phone_number_id);
-
-      if(!waChannelResult) {
-        console.warn(`Unknown WABA ID: ${entry.id} — ignoring message`);
-        return null;
-      }
-
-      const waChannel = waChannelResult.whatsappChannel;
-
-      const wa = new WhatsappMessage({
-        id: message.id,
-        from: message.from,
-        timestamp: parseInt(message.timestamp) * 1000,
-        type: message.type,
-        body: body,
-        waBusinessAccountId: waChannelResult.whatsAppBusinessId || entry.id,
-        phoneNumberId: waChannel.phoneNumberId || metadata.phone_number_id,
-        displayPhoneNumber: metadata.display_phone_number,
-        contactName: contact && contact.profile ? contact.profile.name : 'Unknown',
-        contactWaId: contact ? contact.wa_id : (message?.from || null),
-        status: 'received',
-        createdAt: Date.now(),
-      });
-
-      return wa;
-    } catch (error) {
-      console.error('Error parsing WhatsApp payload:', error);
-      return null;
-    }
   }
 }
 
