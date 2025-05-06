@@ -1,15 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const config = require('../../../shared/utils/configs');
 
 const WhatsappController = require('../controllers/WhatsappController');
-const ChatServiceAdapter = require('../../services/ChatServiceAdapter');
-const ProcessWhatsappWebhook = require('../../application/usecase/ProcessWhatsappWebhook');
 
-// init
-const chatServiceAdapter = new ChatServiceAdapter();
-const processWhatsappWebhook = new ProcessWhatsappWebhook(chatServiceAdapter);
-const whatsappController = new WhatsappController(processWhatsappWebhook);
+const whatsappController = new WhatsappController();
 
 /**
  * @swagger

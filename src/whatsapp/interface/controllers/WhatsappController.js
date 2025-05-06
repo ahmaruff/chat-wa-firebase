@@ -1,9 +1,10 @@
 const STATUS = require('../../../shared/constants/statusCodes');
 const responseFormatter = require('../../../shared/utils/responseFormatter');
+const ProcessWhatsappWebhook = require('../../application/usecase/ProcessWhatsappWebhook');
 
 class WhatsappController {
-  constructor(processWhatsappWebhook) {
-    this.processWhatsappWebhook = processWhatsappWebhook;
+  constructor() {
+    this.processWhatsappWebhook = new ProcessWhatsappWebhook();
   }
 
   /**
