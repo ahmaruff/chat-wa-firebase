@@ -2,7 +2,6 @@ const ChannelServiceAdapter = require('../../services/ChannelServiceAdapter');
 
 class SendMessage {
   constructor() {
-    
     this.channelServiceAdapter = new ChannelServiceAdapter();
   }
 
@@ -11,28 +10,33 @@ class SendMessage {
     return `${apiUrl}/${phoneNumberId}/messages`;
   }
 
-  async send({ waBusinessId, recipientNumber, messageText }) {
-    const waChannelResult = await this.channelServiceAdapter.getWhatsappChannel(waBusinessId);
+  async send({ waBusinessId, clientWaId, messageText }) {
+    const waConfig = await this.channelServiceAdapter.getWaConfigByWaBusinessId(waBusinessId);
 
-    if (!waChannelResult) {
-      console.warn(`Unknown WABA ID: ${waBusinessId} — ignoring message`);
+    if (!waConfig) {
+      console.log(`Unknown waBusinessId : ${waBusinessId} — ignoring message`);
       return null;
     }
 
-    const waChannel = waChannelResult.whatsappChannel;
-    const waba = waChannelResult.whatsAppBusinessId;
-    console.log('waba: ',waba);
-    console.log('phoneNumberId: ', waChannel.phoneNumberId);
+    console.log('waBusinessId: ', waConfig.waBusinessId);
+    console.log('phoneNumberId: ', waConfig.phoneNumberId);
+    console.log('clientWaId: ', clientWaId);
 
-    const url = SendMessage.generateApiUrl(waChannel.phoneNumberId);
-    console.log(url);
+    const url = SendMessage.generateApiUrl(waConfig.phoneNumberId);
+    console.log('send to whatsapp api url: ', url);
 
     try {
+      // Remove the 'whatsapp:' prefix if it's there
+      const recipientNumber = clientWaId.replace('whatsapp:', '');
+      if (!recipientNumber) {
+        throw new Error("Recipient number is invalid.");
+      }
+
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${waChannel.accessToken}`,
+          'Authorization': `Bearer ${waConfig.accessToken}`,
         },
         body: JSON.stringify({
           messaging_product: 'whatsapp',
@@ -55,7 +59,7 @@ class SendMessage {
         result: result,
       };
     } catch (error) {
-      console.warn(`Failed to send message:`, error);
+      console.error(`Failed to send message:`, error);
       throw error;
     }
   }

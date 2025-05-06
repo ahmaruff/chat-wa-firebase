@@ -5,17 +5,18 @@ class WhatsAppService {
     this.sendMessage = new SendMessage();
   }
 
-  async sendToWhatsapApi({ waBusinessId, recipientNumber, messageText}) {
+  async sendToWhatsapApi({ waBusinessId, clientWaId, messageText }) {
     try {
+      // Call the SendMessage send method with clientWaId instead of recipientNumber
       const result = await this.sendMessage.send({
         waBusinessId: waBusinessId,
-        recipientNumber: recipientNumber,
+        clientWaId: clientWaId,
         messageText: messageText,
       });
 
       return result;
     } catch (error) {
-      console.log('error send to whatsapp api: ', error);
+      console.error('Error sending to WhatsApp API: ', error);
       throw error;
     }
   }

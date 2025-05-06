@@ -60,7 +60,18 @@ class ChatController {
       const timestamp = Date.now();
   
       // abis ini call ke wa api
-  
+      const resWaApi = await this.whatsAppServiceAdapter.sendToWhatsapApi({
+        waBusinessId: wa_business_id ?? waConfig.waBusinessId, 
+        clientWaId: client_wa_id, 
+        messageText: message
+      });
+
+      // If resWaApi failed, throw an error
+      if (!resWaApi || !resWaApi.success) {
+        console.error('Failed to send message to WhatsApp API:', resWaApi);
+        throw new Error('Failed to send message to WhatsApp API');
+      }
+
       // terus call ke save thread
       const res = await this.saveChatWithThread.execute({
         waBusinessId: wa_business_id ?? waConfig.waBusinessId,
