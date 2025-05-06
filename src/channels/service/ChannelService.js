@@ -145,6 +145,26 @@ class ChannelService {
     }
   }
 
+  async getWaConfigByCrmChannelId(crmChannelId) {
+    try {
+      const result = await this.manageWaConfig.getByCrmChannelId(crmChannelId);
+      return result;
+    } catch (error) {
+      console.error('Service - Get wa config by crm channel id failed: ', error);
+      throw error;
+    }
+  }
+
+  async getWaConfigByParticipants(channelId, participantId) {
+    try {
+      const result = await this.manageWaConfig.getByParticipants(channelId, participantId);
+      return result;
+    } catch (error) {
+      console.error('Service - Get wa config by participants failed: ', error);
+      throw error;
+    }
+  }
+
   async deleteWaConfig(id) {
     try {
       const result = await this.manageWaConfig.delete(id);

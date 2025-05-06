@@ -429,6 +429,191 @@ router.post('/get-by-wa-business-id', (req, res) => waConfigController.getByWaBu
 
 /**
  * @swagger
+ * /wa-configs/get-by-crm-channel:
+ *   post:
+ *     summary: Get WhatsApp Configuration by CRM Channel ID
+ *     tags: [WaConfigs]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - crm_channel_id
+ *             properties:
+ *               crm_channel_id:
+ *                 type: string
+ *                 description: CRM Channel ID to find WhatsApp configuration for
+ *                 example: "crm-001"
+ *     responses:
+ *       200:
+ *         description: WhatsApp Configuration retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "SUCCESS"
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "Get wa config success"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     wa_config:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                           example: "waconfig-123"
+ *                         channelId:
+ *                           type: string
+ *                           example: "channel-123"
+ *                         isActive:
+ *                           type: boolean
+ *                           example: true
+ *                         waBusinessId:
+ *                           type: string
+ *                           example: "waba-123456789"
+ *                         phoneNumberId:
+ *                           type: string
+ *                           example: "123456789"
+ *                         displayPhoneNumber:
+ *                           type: string
+ *                           example: "+6281234567890"
+ *                         accessToken:
+ *                           type: string
+ *                           example: "EAAJZCZCx..."
+ *                         participants:
+ *                           type: array
+ *                           items:
+ *                             type: string
+ *                           example: ["user-123", "user-456"]
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "ERROR"
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: "Error message"
+ *                 data:
+ *                   type: null
+ */
+router.post('/get-by-crm-channel', (req, res) => waConfigController.getByCrmChannelId(req, res));
+
+/**
+ * @swagger
+ * /wa-configs/get-by-participant:
+ *   post:
+ *     summary: Find WhatsApp Configurations by Channel ID and Participant ID
+ *     tags: [WaConfigs]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - channel_id
+ *               - participant_id
+ *             properties:
+ *               channel_id:
+ *                 type: string
+ *                 description: Channel ID to filter WhatsApp configurations
+ *                 example: "channel-123"
+ *               participant_id:
+ *                 type: string
+ *                 description: Participant ID to filter WhatsApp configurations (must be in participants array)
+ *                 example: "user-123"
+ *     responses:
+ *       200:
+ *         description: WhatsApp Configurations retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "SUCCESS"
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "Get wa config success"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     wa_config:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                             example: "waconfig-123"
+ *                           channelId:
+ *                             type: string
+ *                             example: "channel-123"
+ *                           isActive:
+ *                             type: boolean
+ *                             example: true
+ *                           waBusinessId:
+ *                             type: string
+ *                             example: "waba-123456789"
+ *                           phoneNumberId:
+ *                             type: string
+ *                             example: "123456789"
+ *                           displayPhoneNumber:
+ *                             type: string
+ *                             example: "+6281234567890"
+ *                           accessToken:
+ *                             type: string
+ *                             example: "EAAJZCZCx..."
+ *                           participants:
+ *                             type: array
+ *                             items:
+ *                               type: string
+ *                             example: ["user-123", "user-456"]
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "ERROR"
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: "Error message"
+ *                 data:
+ *                   type: null
+ */
+router.post('/get-by-participant', (req, res) => waConfigController.getByParticipants(req, res));
+
+/**
+ * @swagger
  * /wa-configs/{id}:
  *   delete:
  *     summary: Delete a WhatsApp Configuration

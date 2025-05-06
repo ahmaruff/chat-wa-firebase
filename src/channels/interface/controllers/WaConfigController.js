@@ -4,9 +4,9 @@ const ManageWaConfig = require("../../application/usecase/ManageWaConfig");
 const WaConfig = require("../../domain/entities/WaConfig");
 
 class WaConfigController {
-  constructor(waConfigRepository) {
+  constructor(waConfigRepository, channelRepository) {
     this.waConfigRepository = waConfigRepository;
-    this.manageWaConfig = new ManageWaConfig(this.waConfigRepository);
+    this.manageWaConfig = new ManageWaConfig(this.waConfigRepository, channelRepository);
   }
 
   async save(req, res) {
@@ -84,6 +84,37 @@ class WaConfigController {
       }));
     } catch (error) {
       console.error('Controller - Failed get wa config by wa business id: ', error);
+      return res.status(500).json(responseFormatter(STATUS.ERROR, 500, error.message, null));
+    }
+  }
+
+  async getByCrmChannelId(req, res) {
+    try {
+      const { crm_channel_id } = req.body;
+
+      const waConfig = await this.manageWaConfig.getByCrmChannelId(crm_channel_id);
+      
+      return res.status(200).json(responseFormatter(STATUS.SUCCESS, 200, 'Get wa config success', {
+        wa_config: waConfig,
+      }));
+    } catch (error) {
+      console.error('Controller - Failed get wa config by crm channel id: ', error);
+      return res.status(500).json(responseFormatter(STATUS.ERROR, 500, error.message, null));
+    }
+  }
+
+  async getByParticipants(req, res) {
+    try {
+      const { channel_id, participant_id } = req.body;
+
+      const waConfig = await this.manageWaConfig.getByParticipants(channel_id, participant_id);
+
+      return res.status(200).json(responseFormatter(STATUS.SUCCESS, 200, 'Get wa config success', {
+        wa_config: waConfig,
+      }));
+      
+    } catch (error) {
+      console.error('Controller - Failed get wa config by participants: ', error);
       return res.status(500).json(responseFormatter(STATUS.ERROR, 500, error.message, null));
     }
   }

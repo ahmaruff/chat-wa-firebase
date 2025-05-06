@@ -13,7 +13,6 @@ class FirestoreWaConfigRepository extends WaConfigRepository{
     super();
     this.db = admin.firestore();
     this.collection = this.db.collection(WA_CONFIG_COLLECTION);
-    this.channelRepository = channelRepository ?? new FirestoreChannelRepository();
   }
 
   _documentToEntity(doc) {
@@ -91,25 +90,6 @@ class FirestoreWaConfigRepository extends WaConfigRepository{
     }
   }
 
-  async getByCrmChannelId(crmChannelId) {
-    try {
-      const channel = await this.channelRepository.getByCrmChannelId(crmChannelId);
-      if(!channel) {
-        console.log(`Channel with crmChannelId: ${crmChannelId} not found`,);
-        return [];
-      }
-
-      const snapshot = await this.collection
-        .where('channel_id', '==', channel.id)
-        .get();
-
-      return snapshot.docs.map(doc => this._documentToEntity(doc));
-    } catch (error) {
-      console.error('Error getting Wa Config:', error);
-      throw error;
-    }
-  }
-
   async getByWaBusinessId(waBusinessId) {
     try {
       const snapshot = await this.collection
@@ -121,6 +101,28 @@ class FirestoreWaConfigRepository extends WaConfigRepository{
       return this._documentToEntity(doc);
     } catch (error) {
       console.error('Error getting Wa Config by wa bussiness id:', error);
+      throw error;
+    }
+  }
+
+  async getByParticipants(channelId, participantId) {
+    try {
+      // First, get all waConfigs for the channel
+      const snapshot = await this.collection
+        .where('channel_id', '==', channelId)
+        .get();
+      
+      // Then filter those that contain the participantId in the participants array
+      const waConfigs = snapshot.docs
+        .map(doc => this._documentToEntity(doc))
+        .filter(waConfig => 
+          waConfig.participants && 
+          waConfig.participants.includes(participantId)
+        );
+        
+      return waConfigs;
+    } catch (error) {
+      console.error('Error getting Wa Config by participants:', error);
       throw error;
     }
   }

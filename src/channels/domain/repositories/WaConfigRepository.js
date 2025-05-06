@@ -14,8 +14,12 @@ class WaConfigRepository{
     throw new Error("Method getByChannelId() must be implemented"); 
   }
 
-  getByCrmChannelId(crmChannelId) {
-    throw new Error("Method getByCrmChannelId() must be implemented"); 
+  getByWaBusinessId(waBusinessId) {
+    throw new Error("Method getByCrmWaBusinessId() must be implemented"); 
+  }
+
+  getByParticipants(channelId, participantId) {
+    throw new Error(`method getByParticipants() must be implemented`);
   }
 
   getAll(channelId) {
