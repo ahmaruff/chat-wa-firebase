@@ -13,27 +13,27 @@ class ChatServiceAdapter {
    * @returns {Promise<Object>} - Hasil pembuatan chat
    */
   async createChatFromWhatsApp(whatsappMessage) {
-    if(!whatsappMessage || whatsappMessage == null) {
-      throw new Error("whatsapp Message null, require instance of WhatsappMessage"); 
+    if (!(whatsappMessage instanceof WhatsappMessage)) {
+      throw new Error("Parameter must be an instance of WhatsappMessage.");
     }
 
-    if(!(whatsappMessage instanceof WhatsappMessage)) {
-      throw new Error("Invalid whatsappMessage object");
+    if (!whatsappMessage.wamid) {
+      throw new Error("Missing required 'wamid'.");
     }
 
-    if(!whatsappMessage.wamid) {
-      throw new Error("wamid is required");
+    if (!whatsappMessage.waBusinessId) {
+      throw new Error("Missing required 'waBusinessId'.");
     }
 
-    if(!whatsappMessage.waBusinessId) {
-      throw new Error("waBusinessId is required");
-    }
-    
     try {
-      let thread = null;
-      thread = await this.chatService.getThread(whatsappMessage.waBusinessId, whatsappMessage.clientWaId);
+      const timestamp = Date.now();
 
-      if(!thread) {
+      let thread = await this.chatService.getThread(
+        whatsappMessage.waBusinessId,
+        whatsappMessage.clientWaId
+      );
+
+      if (!thread) {
         thread = await this.chatService.createThread({
           waBusinessId: whatsappMessage.waBusinessId,
           phoneNumberId: whatsappMessage.phoneNumberId,
@@ -53,10 +53,9 @@ class ChatServiceAdapter {
         });
       }
 
-      const timestamp = Date.now();
-      const waData = whatsappMessage.toChatServiceAdapterPayload({
-        unreadCount: thread.unreadCount + 1,
-        threadStatus : thread.status ?? THREAD_STATUS.QUEUE,
+      const chatPayload = whatsappMessage.toChatServiceAdapterPayload({
+        unreadCount: (thread.unreadCount || 0) + 1,
+        threadStatus: thread.status ?? THREAD_STATUS.QUEUE,
         firstResponseDatetime: thread.firstResponseDatetime ?? timestamp,
         lastResponseDatetime: thread.lastResponseDatetime ?? null,
         currentHandlerUserId: thread.currentHandlerUserId,
@@ -68,13 +67,13 @@ class ChatServiceAdapter {
         chatCreatedAt: timestamp,
         chatUpdatedAt: timestamp,
       });
-      
-      const result = await this.chatService.createChatFromExternalSource(waData);
 
-      console.log('result save chat:', result);
+      const result = await this.chatService.createChatFromExternalSource(chatPayload);
+
+      console.log('Chat saved successfully:', result);
       return result;
     } catch (error) {
-      console.error('Error in ChatServiceAdapter:', error);
+      console.error('Error while creating chat from WhatsApp:', error);
       throw error;
     }
   }
