@@ -216,6 +216,135 @@ class ChatController {
       );
     }
   }
+
+  /**
+   * Get media information with proxy URL
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   */
+  async getMediaInfo(req, res) {
+    try {
+      const { mediaId } = req.params;
+      const { wa_business_id } = req.query;
+
+      // Validate required parameters
+      if (!mediaId || !wa_business_id) {
+        return res.status(400).json(
+          responseFormatter(STATUS.FAIL, 400, 'Missing required parameters: mediaId, wa_business_id', null)
+        );
+      }
+
+      const waConfig = await this.channelServiceAdapter.getWaConfigByWaBusinessId(wa_business_id);
+
+      if (!waConfig) {
+        console.error(`Unknown waBusinessId: ${wa_business_id} — ignoring request`);
+        return res.status(400).json(
+          responseFormatter(STATUS.FAIL, 400, `Unknown waBusinessId: ${wa_business_id} — ignoring request`, null)
+        );
+      }
+
+      // Generate base URL for proxy
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+      // Get media info using the adapter
+      const mediaInfo = await this.whatsAppServiceAdapter.getMediaInfo({
+        waBusinessId: wa_business_id,
+        mediaId,
+        baseUrl
+      });
+
+      // Set cache headers for better performance
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+
+      return res.status(200).json(
+        responseFormatter(
+          STATUS.SUCCESS,
+          200,
+          'Media info retrieved successfully',
+          mediaInfo
+        )
+      );
+    } catch (error) {
+      console.error('Error getting media info:', error);
+
+      // Handle specific error cases
+      if (error.message.includes('Unknown waBusinessId')) {
+        return res.status(400).json(
+          responseFormatter(STATUS.FAIL, 400, error.message, null)
+        );
+      }
+
+      if (error.message.includes('Media URL not found')) {
+        return res.status(404).json(
+          responseFormatter(STATUS.FAIL, 404, error.message, null)
+        );
+      }
+
+      return res.status(500).json(
+        responseFormatter(STATUS.ERROR, 500, error.message, null)
+      );
+    }
+  }
+
+  /**
+   * Stream media content to client
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   */
+  async proxyMedia(req, res) {
+    try {
+      const { mediaId } = req.params;
+      const { wa_business_id } = req.query;
+
+      // Validate required parameters
+      if (!mediaId || !wa_business_id) {
+        return res.status(400).json(
+          responseFormatter(STATUS.FAIL, 400, 'Missing required parameters: mediaId, wa_business_id', null)
+        );
+      }
+
+      const waConfig = await this.channelServiceAdapter.getWaConfigByWaBusinessId(wa_business_id);
+
+      if (!waConfig) {
+        console.error(`Unknown waBusinessId: ${wa_business_id} — ignoring request`);
+        return res.status(400).json(
+          responseFormatter(STATUS.FAIL, 400, `Unknown waBusinessId: ${wa_business_id} — ignoring request`, null)
+        );
+      }
+
+      // Stream media directly to response using the adapter
+      await this.whatsAppServiceAdapter.streamMedia({
+        waBusinessId: wa_business_id,
+        mediaId,
+        responseStream: res
+      });
+
+      // The response is handled by the streaming process
+      // No need to return anything here as the stream handles the response
+    } catch (error) {
+      console.error('Error proxying media:', error);
+
+      // Handle specific error cases
+      if (error.message.includes('Unknown waBusinessId')) {
+        return res.status(400).json(
+          responseFormatter(STATUS.FAIL, 400, error.message, null)
+        );
+      }
+
+      if (error.message.includes('Media URL not found')) {
+        return res.status(404).json(
+          responseFormatter(STATUS.FAIL, 404, error.message, null)
+        );
+      }
+
+      // Don't send headers if they're already sent by the streaming process
+      if (!res.headersSent) {
+        return res.status(500).json(
+          responseFormatter(STATUS.ERROR, 500, error.message, null)
+        );
+      }
+    }
+  }
 }
 
 module.exports = ChatController;

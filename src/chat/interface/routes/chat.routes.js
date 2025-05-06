@@ -362,4 +362,310 @@ router.get('/', (req, res) => {
  */
 router.post('/send-message', upload.single('media_file'), (req, res) => chatController.save(req, res));
 
+/**
+ * @swagger
+ * /chats/send-media:
+ *   post:
+ *     summary: Send a WhatsApp media message
+ *     description: Sends a WhatsApp media message with an optional caption
+ *     tags: [Chats]
+ *     consumes:
+ *       - multipart/form-data
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - wa_business_id
+ *               - client_wa_id
+ *               - media_file
+ *             properties:
+ *               wa_business_id:
+ *                 type: string
+ *                 description: WhatsApp Business Account ID
+ *                 example: "1234567890"
+ *               client_wa_id:
+ *                 type: string
+ *                 description: Client's WhatsApp ID
+ *                 example: "6281234567890"
+ *               media_file:
+ *                 type: string
+ *                 format: binary
+ *                 description: Media file to upload (image, video, audio, document, or sticker)
+ *               media_type:
+ *                 type: string
+ *                 description: Type of media being uploaded (will be auto-detected if not provided)
+ *                 enum: [image, video, audio, document, sticker]
+ *                 example: "image"
+ *               caption:
+ *                 type: string
+
+
+ *                 description: Optional caption for the media
+ *                 example: "Check out this image!"
+ *     responses:
+ *       200:
+ *         description: Media message sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "SUCCESS"
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "Media message sent successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     media_id:
+ *                       type: string
+ *                       example: "media123"
+ *                     wamid:
+ *                       type: string
+ *                       example: "wamid.abcd1234"
+ *       400:
+ *         description: Bad request, missing media file, or invalid WhatsApp business ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "FAIL"
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: "No media file uploaded"
+ *                 data:
+ *                   type: null
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "ERROR"
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: "Failed to send media message to WhatsApp API"
+ *                 data:
+ *                   type: null
+ */
+router.post('/send-media', upload.single('media_file'), (req, res) => chatController.sendMedia(req, res));
+
+/**
+ * @swagger
+ * /chats/media/{mediaId}:
+ *   get:
+ *     summary: Get WhatsApp media information
+ *     description: Retrieves information about a WhatsApp media item, including a proxy URL
+ *     tags: [Chats]
+ *     parameters:
+ *       - in: path
+ *         name: mediaId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the media item
+ *         example: "media123"
+ *       - in: query
+ *         name: wa_business_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: WhatsApp Business Account ID
+ *         example: "1234567890"
+ *     responses:
+ *       200:
+ *         description: Media information retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "SUCCESS"
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "Media info retrieved successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     url:
+ *                       type: string
+ *                       description: Proxy URL for accessing the media
+ *                       example: "https://example.com/chats/proxy-media/media123?wa_business_id=1234567890"
+ *                     mime_type:
+ *                       type: string
+ *                       description: MIME type of the media
+ *                       example: "image/jpeg"
+ *                     file_size:
+ *                       type: integer
+ *                       description: Size of the media file in bytes
+ *                       example: 102400
+ *       400:
+ *         description: Missing required parameters or invalid WhatsApp business ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "FAIL"
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: "Missing required parameters: mediaId, wa_business_id"
+ *                 data:
+ *                   type: null
+ *       404:
+ *         description: Media URL not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "FAIL"
+ *                 code:
+ *                   type: integer
+ *                   example: 404
+ *                 message:
+ *                   type: string
+ *                   example: "Media URL not found"
+ *                 data:
+ *                   type: null
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "ERROR"
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: "Error retrieving media info"
+ *                 data:
+ *                   type: null
+ */
+router.get('/media/:mediaId', (req, res) => chatController.getMediaInfo(req, res));
+
+/**
+ * @swagger
+ * /chats/proxy-media/{mediaId}:
+ *   get:
+ *     summary: Stream WhatsApp media content
+ *     description: Streams the content of a WhatsApp media item to the client
+ *     tags: [Chats]
+ *     parameters:
+ *       - in: path
+ *         name: mediaId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the media item
+ *         example: "media123"
+ *       - in: query
+ *         name: wa_business_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: WhatsApp Business Account ID
+ *         example: "1234567890"
+ *     responses:
+ *       200:
+ *         description: Media content streamed successfully
+ *         content:
+ *           application/octet-stream:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       400:
+ *         description: Missing required parameters or invalid WhatsApp business ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "FAIL"
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: "Missing required parameters: mediaId, wa_business_id"
+ *                 data:
+ *                   type: null
+ *       404:
+ *         description: Media URL not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "FAIL"
+ *                 code:
+ *                   type: integer
+ *                   example: 404
+ *                 message:
+ *                   type: string
+ *                   example: "Media URL not found"
+ *                 data:
+ *                   type: null
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "ERROR"
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: "Error streaming media"
+ *                 data:
+ *                   type: null
+ */
+router.get('/proxy-media/:mediaId', (req, res) => chatController.proxyMedia(req, res));
+
 module.exports = router;
