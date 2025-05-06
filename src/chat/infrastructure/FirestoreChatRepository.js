@@ -2,7 +2,6 @@ const admin = require('../../shared/utils/firebase');
 const ChatRepository = require('../domain/repositories/ChatRepository');
 const config = require('../../shared/utils/configs');
 const Chat = require('../domain/entities/Chat');
-const MessageContent = require('../domain/valueObjects/MessageContent');
 
 const FIREBASE_CHAT_COLLECTION = config.firebase.chat_collection || 'wa_chat_test';
 

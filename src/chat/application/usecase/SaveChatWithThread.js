@@ -1,6 +1,5 @@
 const Chat = require('../../domain/entities/Chat');
 const Thread = require('../../domain/entities/Thread');
-const MessageContent = require('../../domain/valueObjects/MessageContent');
 
 const THREAD_STATUS = require('../../../shared/constants/chatStatus');
 
