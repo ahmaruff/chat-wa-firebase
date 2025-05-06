@@ -38,8 +38,10 @@ class FirestoreChannelRepository extends ChannelRepository {
     }
 
     try {
+      const timestamp = Date.now();
+
       const data = channel.toJson();
-      data.updated_at = Date.now();
+      data.updated_at = timestamp;
 
       let docRef;
       if (channel.id) {
@@ -54,7 +56,7 @@ class FirestoreChannelRepository extends ChannelRepository {
         // Create new document
         docRef = this.collection.doc();
         data.id = docRef.id;  
-        data.createdAt = Date.now();
+        data.created_at = timestamp;
         await docRef.set(data);
         console.log(`Created new entity with ID: ${data.id}`);
 
