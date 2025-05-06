@@ -9,42 +9,75 @@ class ProcessWhatsappWebhook {
   }
 
   /**
-   * Memproses payload webhook dari WhatsApp
-   * @param {Object} payload - Payload webhook WhatsApp
-   * @returns {Promise<Object>} - Hasil pemrosesan
-   */
+ * Memproses payload webhook dari WhatsApp
+ * @param {Object} payload - Payload webhook WhatsApp
+ * @returns {Promise<Object>} - Hasil pemrosesan
+ */
   async execute(payload) {
     try {
-      if (!payload || !payload.object || payload.object !== 'whatsapp_business_account') {
+      if (!payload || payload.object !== 'whatsapp_business_account') {
         console.log('Invalid payload or not from WhatsApp Business:', payload);
         throw new Error('Invalid webhook payload');
       }
 
-      const whatsappMessage = WhatsappMessage.fromPayload(payload);
-      
-      if (!whatsappMessage) {
+      const whatsappMessages = WhatsappMessage.fromPayload(payload);
+
+      if (!Array.isArray(whatsappMessages) || whatsappMessages.length === 0) {
         return {
           success: false,
           payload: payload,
-        }
+          reason: 'No valid messages in payload',
+        };
       }
 
-      if(whatsappMessage == null) {
-        return {
-          success: false,
-          payload: payload,
-        }
-      }
+      const results = [];
 
-      console.log(`Received WhatsApp message: ${whatsappMessage.body} from ${whatsappMessage.from}`);
+      for (const msg of whatsappMessages) {
+        try {
+          console.log(`Processing message type: ${msg.type}, from: ${msg.from}`);
       
-      const chatResult = await this.chatServiceAdapter.createChatFromWhatsApp(whatsappMessage);
-      
+          if (msg.type === 'status') {
+            // Only mark as read if status is 'read'
+            if (msg.status === 'read') {
+              const res = await this.chatServiceAdapter.markAsRead(msg.wamid);
+              results.push({
+                type: 'status',
+                status: msg.status,
+                from: msg.from,
+                result: res,
+              });
+            } else {
+              console.log(`Ignoring status: ${msg.status} for message ${msg.wamid}`);
+              results.push({
+                type: 'status',
+                status: msg.status,
+                from: msg.from,
+                result: 'ignored',
+              });
+            }
+          } else {
+            const chatResult = await this.chatServiceAdapter.createChatFromWhatsApp(msg);
+            results.push({
+              type: 'message',
+              from: msg.from,
+              messageBody: msg.body,
+              result: chatResult,
+            });
+          }
+        } catch (err) {
+          console.error('Error handling message:', msg, err);
+          results.push({
+            type: msg.type,
+            from: msg.from,
+            error: err.message,
+          });
+        }
+      }      
+
       return {
         success: true,
-        from: whatsappMessage.from,
-        messageBody: whatsappMessage.body,
-        chatResult: chatResult
+        messagesProcessed: results.length,
+        results,
       };
     } catch (error) {
       console.error('Error processing WhatsApp webhook:', error);

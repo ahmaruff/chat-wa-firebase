@@ -20,38 +20,68 @@ class WhatsappController {
       if (process.env.NODE_ENV === 'development') {
         console.log('Received WhatsApp webhook payload:', JSON.stringify(payload, null, 2));
       }
-      
+  
       // Jika ini adalah ping/health check dari WhatsApp
-      if (payload && payload.object === 'whatsapp_business_account' && 
-          (!payload.entry || !payload.entry[0].changes || !payload.entry[0].changes[0].value.messages)) {
+      if (
+        payload &&
+        payload.object === 'whatsapp_business_account' &&
+        (!payload.entry || !payload.entry[0].changes || !payload.entry[0].changes[0].value.messages)
+      ) {
         console.log('Received WhatsApp ping or status update');
         return res.status(200).send('OK');
       }
-
+  
       // Proses payload webhook
       const result = await this.processWhatsappWebhook.execute(payload);
-
-      if(!result.success) {
-        // always return 200 OK to avoid whatsapp attempted to send it again;
-        res.status(200).json(responseFormatter(STATUS.SUCCESS, 200, 'Webhook received but failed to process, success: false'));
+  
+      if (!result.success) {
+        // Always return 200 OK to avoid WhatsApp retries
+        return res.status(200).json(
+          responseFormatter(
+            STATUS.SUCCESS,
+            200,
+            'Webhook received but failed to process, success: false'
+          )
+        );
       }
-      
-      const resp = {
-        from: result.from,
-        messageBody: result.messageBody,
-        chatCreated: result.chatResult ? true : false
-      }
-      
+  
+      // Format the response based on message type
+      const formattedResults = result.results.map((r) => ({
+        type: r.type,
+        from: r.from,
+        status: r.status,
+        messageBody: r.messageBody,
+        chatCreated: r.type === 'message' ? !!r.result : undefined,
+        markedAsRead: r.type === 'status' && r.status === 'read' ? !!r.result : undefined,
+        ignored: r.result === 'ignored' ? true : false,
+        error: r.error,
+      }));
+  
       // Kirim respons sukses
-      res.status(200).json(responseFormatter(STATUS.SUCCESS, 200, 'Webhook processed successfully', resp));
+      return res.status(200).json(
+        responseFormatter(
+          STATUS.SUCCESS,
+          200,
+          'Webhook processed successfully',
+          {
+            messagesProcessed: result.messagesProcessed,
+            results: formattedResults,
+          }
+        )
+      );
     } catch (error) {
       console.error('Error processing webhook:', error);
-
-      // Tetap kirim status 200 ke WhatsApp untuk menghindari retries
-      // WhatsApp mengharapkan respons 200 bahkan jika terjadi error pada pemrosesan
-      res.status(200).json(responseFormatter(STATUS.SUCCESS, 200, `Webhook received but failed to process: ${error.meesage}`, null));
+  
+      return res.status(200).json(
+        responseFormatter(
+          STATUS.SUCCESS,
+          200,
+          `Webhook received but failed to process: ${error.message}`,
+          null
+        )
+      );
     }
-  }
+  }  
 
   /**
    * Menangani request GET verifikasi webhook dari WhatsApp

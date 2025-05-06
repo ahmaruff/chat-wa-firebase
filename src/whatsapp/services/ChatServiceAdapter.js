@@ -77,6 +77,16 @@ class ChatServiceAdapter {
       throw error;
     }
   }
+
+  async markAsRead(wamid) {
+    try {
+      const result = await this.chatService.markAsRead(wamid);
+      return result;
+    } catch (error) {
+      console.error('Error while marking as read chat:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = ChatServiceAdapter;
