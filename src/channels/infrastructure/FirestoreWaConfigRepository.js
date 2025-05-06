@@ -148,3 +148,5 @@ class FirestoreWaConfigRepository extends WaConfigRepository{
     }
   }
 }
+
+module.exports = FirestoreWaConfigRepository;
