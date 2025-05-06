@@ -19,7 +19,25 @@ class FirestoreThreadRepository extends ThreadRepository {
   }
 
   async save(thread) {
+    if(!(thread instanceof Thread)) {
+      throw new Error('Invalid Thread object');
+    }
+
+    if(!thread.clientWaId) {
+      throw new Error("clientWaId is required");
+    }
+
+    if(!thread.waBusinessId) {
+      throw new Error("waBusinessId is required");
+    }
+
+    if(!thread.phoneNumberId) {
+      throw new Error("phoneNumberId is required");
+    }
+
     try {
+      const timestamp = Date.now();
+
       let threadDocRef;
   
       if (thread.id) {
@@ -30,7 +48,6 @@ class FirestoreThreadRepository extends ThreadRepository {
       }
 
       // const timestamp = admin.firestore.FieldValue.serverTimestamp();
-      const timestamp = Date.now();
       const existingThread = await this.getByWhatsappInfo(thread.waBusinessId, thread.clientWaId);
   
       let threadRef;
@@ -38,24 +55,10 @@ class FirestoreThreadRepository extends ThreadRepository {
 
       // Convert Thread entity to Firestore document data
       // ngikutin entity thread
-      const threadData = {
-        id: thread.id,
-        wa_business_id: thread.waBusinessId,
-        client_wa_id: thread.clientWaId,
-        client_name: thread.clientName,
-        client_phone_number_id: thread.clientPhoneNumberId,
-        client_display_phone_number: thread.clientDisplayPhoneNumber,
-        unread_count: thread.unreadCount,
-        status: thread.status ?? THREAD_STATUS.QUEUE,
-        last_message_media_type: thread.lastMessageMediaType,
-        last_message: thread.lastMessage,
-        first_response_datetime: thread.firstResponseDatetime,
-        last_response_datetime: thread.lastResponseDatetime,
-        current_handler_user_id: thread.currentHandlerUserId,
-        internal_user_detail: thread.convertInternalUserDetailToJson(),
-        created_at: thread.createdAt ?? timestamp,
-        updated_at: timestamp
-      }
+
+      const threadData = thread.toJson();
+      threadData.status = thread.status ?? THREAD_STATUS.QUEUE;
+      threadData.updated_at = timestamp;
       
       if (existingThread) {
         if (existingThread.status === THREAD_STATUS.COMPLETED) {
@@ -77,6 +80,8 @@ class FirestoreThreadRepository extends ThreadRepository {
       } else {
         threadRef = this.threadCollection.doc();
         threadData.id = threadRef.id;
+        threadData.created_at = timestamp;
+        
         await threadRef.set(threadData);
         const newThreadDoc = await threadRef.get();
         savedThread = this._documentToEntity(newThreadDoc);

@@ -2,8 +2,9 @@ class Chat {
   constructor({
     id,
     threadId,
+    phoneNumberId,
+    clientWaId,
     wamid,
-    clientPhoneNumberId,
     mediaId,
     mediaType,
     mediaPathName,
@@ -17,14 +18,16 @@ class Chat {
 
     Thread.validateInput({
       threadId,
-      clientPhoneNumberId,
+      phoneNumberId,
+      clientWaId,
       message
     });
 
     this.id = id ?? null;
     this.threadId = threadId;
+    this.phoneNumberId = phoneNumberId;
+    this.clientWaId = clientWaId;
     this.wamid = wamid ?? null;
-    this.clientPhoneNumberId = clientPhoneNumberId;
     this.mediaId = mediaId ?? null;
     this.mediaType = mediaType;
     this.mediaPathName = mediaPathName ?? null;
@@ -38,7 +41,8 @@ class Chat {
 
   static validateInput(data) {
     if (!data.threadId) throw new Error("threadId is required");
-    if (!data.clientPhoneNumberId) throw new Error("clientPhoneNumberId is required");
+    if (!data.phoneNumberId) throw new Error("phoneNumberId is required");
+    if (!data.clientWaId) throw new Error("clientWaId is required");
     if (!data.message) throw new Error("message is required");
     return true;
   }
@@ -47,8 +51,9 @@ class Chat {
     return new Chat({
       id: data.id ?? null,
       threadId: data.thread_id,
+      phoneNumberId: data.phone_number_id,
+      clientWaId: data.client_wa_id,
       wamid: data.wamid,
-      clientPhoneNumberId: data.client_phone_number_id,
       mediaId: data.media_id,
       mediaType: data.media_type,
       mediaPathName: data.media_path_name,
@@ -65,8 +70,9 @@ class Chat {
     return {
       id: this.id,
       thread_id: this.threadId,
+      phone_number_id: this.phoneNumberId,
+      client_wa_id: this.clientWaId,
       wamid: this.wamid,
-      client_phone_number_id: this.clientPhoneNumberId,
       media_id: this.mediaId,
       media_type: this.mediaType,
       media_path_name: this.mediaPathName,
@@ -87,8 +93,9 @@ class Chat {
     return new Chat({
       id: data.id ?? null,
       threadId: data.thread_id,
+      phoneNumberId: data.phone_number_id,
+      clientWaId: data.client_wa_id,
       wamid: data.wamid,
-      clientPhoneNumberId: data.client_phone_number_id,
       mediaId: data.media_id,
       mediaType: data.media_type,
       mediaPathName: data.media_path_name,

@@ -26,10 +26,10 @@ class ChatController {
     try {
       const {
         wa_business_id,
+        phone_number_id,
+        display_phone_number,
         client_wa_id,
         client_name,
-        client_phone_number_id,
-        client_display_phone_number,
         unread_count,
         thread_status,
         first_response_datetime,
@@ -66,8 +66,8 @@ class ChatController {
         waBusinessId: wa_business_id ?? waConfig.waBusinessId,
         clientWaId: client_wa_id,
         clientName: client_name,
-        clientPhoneNumberId: client_phone_number_id,
-        clientDisplayPhoneNumber: client_display_phone_number,
+        phoneNumberId: phone_number_id,
+        displayPhoneNumber: display_phone_number,
         unreadCount: unread_count,
         threadStatus: thread_status,
         firstResponseDatetime: first_response_datetime ?? timestamp,

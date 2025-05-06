@@ -4,10 +4,10 @@ class Thread {
   constructor({
     id = null,
     waBusinessId,
+    phoneNumberId,
+    displayPhoneNumber,
     clientWaId,
     clientName,
-    clientPhoneNumberId,
-    clientDisplayPhoneNumber,
     unreadCount,
     status,
     lastMessageMediaType,
@@ -23,16 +23,16 @@ class Thread {
       waBusinessId,
       clientWaId,
       clientName,
-      clientPhoneNumberId,
+      phoneNumberId,
       internalUserDetail,
     });
 
     this.id = id || null;
     this.waBusinessId = waBusinessId;
+    this.phoneNumberId = phoneNumberId;
+    this.displayPhoneNumber = displayPhoneNumber;
     this.clientWaId = clientWaId;
     this.clientName = clientName;
-    this.clientPhoneNumberId = clientPhoneNumberId;
-    this.clientDisplayPhoneNumber = clientDisplayPhoneNumber;
     this.unreadCount = unreadCount || 0;
     this.status = status;
     this.lastMessageMediaType = lastMessageMediaType;
@@ -47,9 +47,9 @@ class Thread {
 
   static validateInput(data) {
     if (!data.waBusinessId) throw new Error("waBusinessId is required");
+    if (!data.phoneNumberId) throw new Error("phoneNumberId is required");
     if (!data.clientWaId) throw new Error("clientWaId is required");
     if (!data.clientName) throw new Error("clientName is required");
-    if (!data.clientPhoneNumberId) throw new Error("clientPhoneNumberId is required");
 
     if (!Array.isArray(data.internalUserDetail)) throw new Error("internalUserDetail must be an array");
   
@@ -70,10 +70,10 @@ class Thread {
     return {
       id: this.id,
       wa_business_id: this.waBusinessId,
+      phone_number_id: this.phoneNumberId,
+      display_phone_number: this.displayPhoneNumber,
       client_wa_id: this.clientWaId,
       client_name: this.clientName,
-      client_phone_number_id: this.clientPhoneNumberId,
-      client_display_phone_number: this.clientDisplayPhoneNumber,
       unread_count: this.unreadCount,
       status: this.status,
       last_message_media_type: this.lastMessageMediaType,
@@ -96,19 +96,19 @@ class Thread {
 
     Thread.validateInput({
       waBusinessId: data.wa_business_id,
+      phoneNumberId: data.phone_number_id,
       clientWaId: data.client_wa_id,
       clientName: data.client_name,
-      clientPhoneNumberId: data.client_phone_number_id,
       internalUserDetail: internalUserDetail,
     });
 
     return new Thread({
       id: data.id,
       waBusinessId: data.wa_business_id,
+      phoneNumberId: data.phone_number_id,
+      displayPhoneNumber: data.display_phone_number,
       clientWaId: data.client_wa_id,
       clientName: data.client_name,
-      clientPhoneNumberId: data.client_phone_number_id,
-      clientDisplayPhoneNumber: data.client_display_phone_number,
       unreadCount: data.unread_count,
       status: data.status,
       lastMessageMediaType: data.last_message_media_type,
@@ -135,19 +135,19 @@ class Thread {
 
     Thread.validateInput({
       waBusinessId: data.wa_business_id,
+      phoneNumberId: data.phone_number_id,
       clientWaId: data.client_wa_id,
       clientName: data.client_name,
-      clientPhoneNumberId: data.client_phone_number_id,
       internalUserDetail: internalUserDetail,
     });
 
     return new Thread({
       id: doc.id,
       waBusinessId: data.wa_business_id,
+      phoneNumberId: data.phone_number_id,
+      displayPhoneNumber: data.display_phone_number,
       clientWaId: data.client_wa_id,
       clientName: data.client_name,
-      clientPhoneNumberId: data.client_phone_number_id,
-      clientDisplayPhoneNumber: data.client_display_phone_number,
       unreadCount: data.unread_count,
       status: data.status,
       lastMessageMediaType: data.last_message_media_type,

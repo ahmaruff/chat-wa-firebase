@@ -67,6 +67,14 @@ router.get('/', (req, res) => {
  *                 type: string
  *                 description: WhatsApp Business Account ID
  *                 example: "1234567890"
+ *               phone_number_id:
+ *                 type: string
+ *                 description: WA Business phone number ID
+ *                 example: "12345"
+ *               display_phone_number:
+ *                 type: string
+ *                 description: WA Business display phone number
+ *                 example: "6281234567890"
  *               client_wa_id:
  *                 type: string
  *                 description: Client's WhatsApp ID
@@ -75,14 +83,6 @@ router.get('/', (req, res) => {
  *                 type: string
  *                 description: Client's name
  *                 example: "John Doe"
- *               client_phone_number_id:
- *                 type: string
- *                 description: Client's phone number ID
- *                 example: "12345"
- *               client_display_phone_number:
- *                 type: string
- *                 description: Client's display phone number
- *                 example: "+6281234567890"
  *               unread_count:
  *                 type: integer
  *                 description: Number of unread messages

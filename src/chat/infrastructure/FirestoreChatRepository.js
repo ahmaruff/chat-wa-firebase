@@ -51,44 +51,42 @@ class FirestoreChatRepository extends ChatRepository {
   }
 
   async save(chat) {
+    if (!(chat instanceof Chat)) {
+      throw new Error('Invalid Chat object');
+    }
+
+    if (!chat.threadId) {
+      throw new Error('Error: Thread ID cannot be null');
+    }
+
     try {
-      if (!chat.threadId) {
-        throw new Error('Error: Thread ID cannot be null');
-      }
-  
-      let chatDocRef;
-  
-      if (chat.id) {
-        chatDocRef = this.chatCollection.doc(chat.id);
-      } else {
-        chatDocRef = this.chatCollection.doc();
-        chat.id = chatDocRef.id;
-      }
-  
       const timestamp = Date.now();
-      const existing = await this.getById(chat.id);
-  
-      // samain kaya yang ada di entity
-      const chatData = {
-        id: chat.id,
-        thread_id: chat.threadId,
-        wamid: chat.wamid,
-        client_phone_number_id: chat.clientPhoneNumberId,
-        media_id: chat.mediaId,
-        media_type: chat.mediaType,
-        media_path_name: chat.mediaPathName,
-        message: chat.message,
-        unread: chat.unread ?? true,
-        reply_to: chat.replyTo ?? null,
-        replied_by: chat.repliedBy ?? null,
-        created_at: existing ? existing.createdAt : timestamp,
-        updated_at: existing ? existing.updatedAt : timestamp,
+
+      const dataChat = chat.toJson();
+      let chatDocRef;
+
+      if(chat.id) {
+        // Update existing document
+        dataChat.updated_at = timestamp;
+        chatDocRef = this.chatCollection.doc(chat.id);
+
+        await chatDocRef.update(dataChat);        
+        console.log(`Updated chat with ID: ${chat.id}`);
+        const updatedDoc = await docRef.get();
+        return this._documentToEntity(updatedDoc);
+      } else {
+        // create new doc
+        chatDocRef = this.chatCollection.doc();
+        dataChat.id = chatDocRef.id;
+        dataChat.created_at = timestamp;
+        dataChat.updated_at = timestamp;
+
+        await chatDocRef.set(dataChat);
+        console.log(`Created new entity with ID: ${dataChat.id}`);
+
+        const snapshot = await docRef.get();
+        return this._documentToEntity(snapshot);
       }
-  
-      await chatDocRef.set(chatData, { merge: true });
-  
-      const savedChatDoc = await chatDocRef.get();
-      return this._documentToEntity(savedChatDoc);
     } catch (error) {
       console.error('Error saving chat to Firestore:', error);
       throw error;
@@ -97,8 +95,10 @@ class FirestoreChatRepository extends ChatRepository {
 
   async markAsRead(chatId) {
     try {
+      const timestamp = Date.now();
+
       const chatRef = this.chatCollection.doc(chatId);
-      await chatRef.update({ unread: false });
+      await chatRef.update({ unread: false, updated_at: timestamp });
       return true;
     } catch (error) {
       console.error('Error marking chat as read:', error);
@@ -108,9 +108,11 @@ class FirestoreChatRepository extends ChatRepository {
 
   async markAsReadByWamid(wamid) {
     try {
+      const timestamp = Date.now();
+
       const querySnapshot = await this.chatCollection
         .where('wamid', '==', wamid)
-        .orderBy('created_at', 'asc')
+        .orderBy('created_at', 'desc')
         .limit(1)
         .get();
   
@@ -120,7 +122,7 @@ class FirestoreChatRepository extends ChatRepository {
       }
   
       const chatDoc = querySnapshot.docs[0];
-      await chatDoc.ref.update({ unread: false });
+      await chatDoc.ref.update({ unread: false, updated_at: timestamp });
       return true;
     } catch (error) {
       console.error('Error marking chat as read:', error);
@@ -130,6 +132,8 @@ class FirestoreChatRepository extends ChatRepository {
 
   async markThreadAsRead(threadId) {
     try {
+      const timestamp = Date.now();
+
       const batch = this.db.batch();
       const unreadChats = await this.chatCollection
         .where('thread', '==', threadId)
@@ -137,7 +141,7 @@ class FirestoreChatRepository extends ChatRepository {
         .get();
       
       unreadChats.forEach(doc => {
-        batch.update(doc.ref, { unread: false });
+        batch.update(doc.ref, { unread: false, updated_at: timestamp });
       });
       
       await batch.commit();
