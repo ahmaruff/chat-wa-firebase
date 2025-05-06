@@ -326,6 +326,101 @@ router.post('/get-by-channel', (req, res) => waConfigController.getByChannelId(r
 
 /**
  * @swagger
+ * /wa-configs/get-by-wa-bussiness-id:
+ *   post:
+ *     summary: Get WhatsApp Configuration by WA business ID
+ *     tags: [WaConfigs]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - wa_business_id
+ *             properties:
+ *               wa_business_id:
+ *                 type: string
+ *                 description: WA Business ID to find WhatsApp configuration for
+ *                 example: "123149743264"
+ *     responses:
+ *       200:
+ *         description: WhatsApp Configuration retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "SUCCESS"
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "Get wa config success"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     wa_config:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                           example: "waconfig-123"
+ *                         channelId:
+ *                           type: string
+ *                           example: "channel-123"
+ *                         isActive:
+ *                           type: boolean
+ *                           example: true
+ *                         waBusinessId:
+ *                           type: string
+ *                           example: "waba-123456789"
+ *                         phoneNumberId:
+ *                           type: string
+ *                           example: "123456789"
+ *                         displayPhoneNumber:
+ *                           type: string
+ *                           example: "+6281234567890"
+ *                         accessToken:
+ *                           type: string
+ *                           example: "EAAJZCZCx..."
+ *                         participants:
+ *                           type: array
+ *                           items:
+ *                             type: string
+ *                           example: ["user-123", "user-456"]
+ *                         createdAt:
+ *                           type: number
+ *                           example: 1623674829000
+ *                         updatedAt:
+ *                           type: number
+ *                           example: 1623674829000
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "ERROR"
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: "Error message"
+ *                 data:
+ *                   type: null
+ */
+router.post('/get-by-wa-business-id', (req, res) => waConfigController.getByWaBusinessId(req, res));
+
+/**
+ * @swagger
  * /wa-configs/{id}:
  *   delete:
  *     summary: Delete a WhatsApp Configuration

@@ -71,6 +71,20 @@ class WaConfigController {
     }
   }
 
+  async getByWaBusinessId(req, res) {
+    try {
+      const { wa_business_id } = req.body;
+
+      const waConfig = await this.manageWaConfig.getByWaBusinessId(wa_business_id);
+      return res.status(200).json(responseFormatter(STATUS.SUCCESS, 200, 'Get wa config success', {
+        wa_config: waConfig,
+      }));
+    } catch (error) {
+      console.error('Controller - Failed get wa config by wa business id: ', error);
+      return res.status(500).json(responseFormatter(STATUS.ERROR, 500, error.message, null));
+    }
+  }
+
   async delete(req, res) {
     try {
       const id = req.params.id || req.body.id;
@@ -92,3 +106,5 @@ class WaConfigController {
     }
   }
 }
+
+module.exports = WaConfigController;

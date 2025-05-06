@@ -42,6 +42,21 @@ class ManageWaConfig{
     }
   }
 
+  async getByWaBusinessId(waBusinessId) {
+    try {
+      const result = await this.waConfigRepository.getByWaBusinessId(waBusinessId);
+      
+      if(!result) {
+        throw new Error(`Wa Config with wa business id ${waBusinessId} not found`);
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Error get wa config by channel id & waBusinessId:', error);
+      throw error;
+    }
+  }
+
   async delete(id) {
     try {
       const result = await this.waConfigRepository.delete(id);

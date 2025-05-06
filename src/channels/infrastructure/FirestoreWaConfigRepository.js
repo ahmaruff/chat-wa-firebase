@@ -109,10 +109,9 @@ class FirestoreWaConfigRepository extends WaConfigRepository{
     }
   }
 
-  async getByWaBusinessId(channelId, waBusinessId) {
+  async getByWaBusinessId(waBusinessId) {
     try {
       const snapshot = await this.collection
-        .where('channel_id', channelId)
         .where('wa_business_id', waBusinessId)
         .limit(1)
         .get();
