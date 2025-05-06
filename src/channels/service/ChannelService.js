@@ -1,162 +1,156 @@
 const ManageChannel = require('../application/usecase/ManageChannel');
+const ManageWaConfig = require('../application/usecase/ManageWaConfig');
+const Channel = require('../domain/entities/Channel');
+const WaConfig = require('../domain/entities/WaConfig');
 
 class ChannelService {
-  constructor(channelRepository) {
+  constructor(channelRepository, waConfigRepository) {
     this.channelRepository = channelRepository;
+    this.waConfigRepository = waConfigRepository;
     this.manageChannel = new ManageChannel(this.channelRepository);
+    this.manageWaConfig = new ManageWaConfig(this.waConfigRepository);
   }
 
-  async createChannel({id=null, crmChannelId = null, name, isActive=true, waChannels={}}){
+  async saveChannel({
+    id = null,
+    crmChannelId,
+    name,
+    isActive,
+    createdAt,
+    updatedAt
+  }) {
     try {
-      const result = await this.manageChannel.createChannel({
+      const c = new Channel({
         id: id,
-        crmChannelId: crmChannelId || null,
+        crmChannelId: crmChannelId,
+        isActive: isActive,
         name: name,
-        isActive,
-        waChannels: waChannels
-      }); 
+        createdAt: createdAt ?? Date.now(),
+        updatedAt: updatedAt ?? Date.now(),
+      });
+
+      const result = await this.manageChannel.save(c);
 
       return result;
     } catch (error) {
-      console.log('Create Channel failed: ', error);
-      throw error;
-    }
-  }
-
-  async addWhatsAppChannel({channelId, wabaId, phoneNumberId, name, displayPhoneNumber = null, accessToken= null, isActive = null, metadata = {}, participants = []}) {
-    try {
-        const wa = {
-          phone_number_id: phoneNumberId,
-          name: name,
-          display_phone_number: displayPhoneNumber || phoneNumberId,
-          access_token: accessToken || null,
-          is_active: isActive || true,
-          metadata: metadata || {},
-          participants: participants || []
-        }
-
-        const result = await this.manageChannel.addWhatsAppChannel(channelId, wabaId, wa);
-
-        return result;
-    } catch (error) {
-      console.log('Add Whatsapp to Channel failed: ', error);
-      throw error;
-    }
-  }
-
-  async removeWhatsAppChannel(channelId, wabaId) {
-    try {
-      const result = await this.manageChannel.removeWhatsAppChannel(channelId, wabaId);
-
-      return result;
-    } catch (error) {
-      console.log('Remove Whatsapp to Channel failed: ', error);
+      console.error('Service - Create Channel failed: ', error);
       throw error;
     }
   }
 
   async getChannelById(id) {
     try {
-      const result = await this.manageChannel.getChannelById(id);
+      const result = await this.manageChannel.getById(id);
 
       return result;
     } catch (error) {
-      console.log('Get Channel by Id failed: ', error);
+      console.error('service - Get Channel by Id failed: ', error);
       throw error;
     }
   }
 
   async getChannelByCrmChannelId(crmChannelId) {
     try {
-      const result = await this.manageChannel.findByCrmChannelId(crmChannelId);
+      const result = await this.manageChannel.getByCrmChannelId(crmChannelId);
       return result;
     } catch (error) {
-      console.log('Get Channel by CRM Channel Id failed: ', error);
-      throw error;
-    }
-  }
-
-  async findByWabaId(wabaId) {
-    try {
-      const result = await this.manageChannel.findByWabaId(wabaId);
-
-      if(result) {
-        return {
-          whatsAppBusinessId: result.whatsAppBusinessId,
-          channel: result.channel,
-          whatsappChannel: result.whatsappChannel
-        }
-      }
-      return null;
-    } catch (error) {
-      console.log('Find By Phone WABA ID failed: ', error);
-      throw error;
-    }
-  }
-
-  async findByPhoneNumber(phoneNumberId) {
-    try {
-      const result = await this.manageChannel.findByPhoneNumberId(phoneNumberId);
-
-      if(result) {
-        return {
-          channel: result.channel,
-          whatsappChannel: result.whatsappChannel
-        }
-      }
-      return null;
-    } catch (error) {
-      console.log('Find By Phone Number Id failed: ', error);
-      throw error;
-    }
-  }
-
-  async findByParticipantId(channelId, participantId) {
-    try {
-      const result = await this.manageChannel.findByParticipantsId(channelId, participantId);
-
-      if(result) {
-        return {
-          channel: result.channel,
-          wa_channels: result.wa_channels
-        }
-      }
-      return null;
-    } catch (error) {
-      console.log('Find By Participant id failed: ', error);
+      console.error('Service - Get Channel by CRM Channel Id failed: ', error);
       throw error;
     }
   }
 
   async getAllChannels(activeOnly = false){
     try {
-      const result = await this.manageChannel.getAllChannels(activeOnly);
+      const result = await this.manageChannel.getAll(activeOnly);
 
       return result;
     } catch (error) {
-      console.log('Get All Channels failed: ', error);
-      throw error;
-    }
-  }
-
-  async updateChannel(id, data = {}) {
-    try {
-      const result = await this.manageChannel.updateChannel(id, data);
-
-      return result;
-    } catch (error) {
-      console.log('Update Channel failed: ', error);
+      console.error('Service - Get All Channels failed: ', error);
       throw error;
     }
   }
 
   async deleteChannel(id) {
     try {
-      const result = await this.manageChannel.deleteChannel(id);
+      const result = await this.manageChannel.delete(id);
 
       return result;
     } catch (error) {
-      console.log('Delete Channel failed: ', error);
+      console.error('Service - Delete Channel failed: ', error);
+      throw error;
+    }
+  }
+
+  async saveWaConfig({
+    id = null,
+    channelId,
+    isActive,
+    name,
+    waBusinessId,
+    phoneNumberId,
+    displayPhoneNumber,
+    accessToken,
+    createdAt,
+    updatedAt
+  }) {
+    try {
+      const wa = new WaConfig({
+        id: id,
+        channelId: channelId,
+        isActive: isActive,
+        name: name,
+        waBusinessId: waBusinessId,
+        phoneNumberId: phoneNumberId,
+        displayPhoneNumber: displayPhoneNumber,
+        accessToken: accessToken,
+        createdAt: createdAt ?? Date.now(),
+        updatedAt: updatedAt ?? Date.now(),
+      });
+
+      const result = await this.manageWaConfig.save(wa);
+      return result;
+    } catch (error) {
+      console.error('Service - Create wa config failed: ', error);
+      throw error;
+    }
+  }
+
+  async getWaConfigByChannelId(channelId) {
+    try {
+      const result = await this.manageWaConfig.getByChannelId(channelId);
+      return result;
+    } catch (error) {
+      console.error('Service - Get wa config by channel id failed: ', error);
+      throw error;
+    }
+  }
+
+  async getWaConfigById(id) {
+    try {
+      const result = await this.manageWaConfig.getById(id);
+      return result;
+    } catch (error) {
+      console.error('Service - Get wa config by id failed: ', error);
+      throw error;
+    }
+  }
+
+  async getWaConfigByWaBusinessId(waBusinessId) {
+    try {
+      const result = await this.manageWaConfig.getByWaBusinessId(waBusinessId);
+      return result;
+    } catch (error) {
+      console.error('Service - Get wa config by wa business id failed: ', error);
+      throw error;
+    }
+  }
+
+  async deleteWaConfig(id) {
+    try {
+      const result = await this.manageWaConfig.delete(id);
+      return result;
+    } catch (error) {
+      console.error('Service - delete wa config failed: ', error);
       throw error;
     }
   }
