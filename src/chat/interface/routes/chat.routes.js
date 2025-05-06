@@ -1,8 +1,54 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
 const ChatController = require('../controllers/ChatController');
 const FirestoreThreadRepository = require('../../infrastructure/FirestoreThreadRepository');
 const FirestoreChatRepository = require('../../infrastructure/FirestoreChatRepository');
+
+// Configure multer for media file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(__dirname, '../../../uploads/whatsapp');
+    // Create directory if it doesn't exist
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+// Configure multer upload with file size limits
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 16 * 1024 * 1024, // 16MB limit (WhatsApp limit)
+  },
+  fileFilter: function (req, file, cb) {
+    // Validate file types
+    const validTypes = {
+      'image': ['image/jpeg', 'image/png', 'image/webp'],
+      'video': ['video/mp4', 'video/3gpp'],
+      'audio': ['audio/mp3', 'audio/mpeg', 'audio/ogg', 'audio/amr'],
+      'document': ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+      'sticker': ['image/webp']
+    };
+    
+    // Accept all valid WhatsApp media types
+    const validMimetypes = Object.values(validTypes).flat();
+    if (validMimetypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error(`Invalid file type. Allowed types: ${validMimetypes.join(', ')}`), false);
+    }
+  }
+});
 
 const firestoreThreadRepository = new FirestoreThreadRepository();
 const firestoreChatRepository = new FirestoreChatRepository();
@@ -40,8 +86,8 @@ const chatController = new ChatController(firestoreThreadRepository, firestoreCh
  */
 router.get('/', (req, res) => {
   res.json({
-    app_name: "Webhook Chat",
-    description: "webhook chat",
+    app_name: "Webhook Chat Whatsapp",
+    description: "webhook chat Whatsapp",
   });
 });
 
@@ -49,9 +95,12 @@ router.get('/', (req, res) => {
  * @swagger
  * /chats/send-message:
  *   post:
- *     summary: Send a WhatsApp message and save the chat
- *     description: Sends a WhatsApp message, creates or updates a conversation thread, and saves the message
+ *     summary: Send a WhatsApp message (text or media) and save the chat
+ *     description: Sends a WhatsApp message (text or media), creates or updates a conversation thread, and saves the message
  *     tags: [Chats]
+ *     consumes:
+ *       - multipart/form-data
+ *       - application/json
  *     requestBody:
  *       required: true
  *       content:
@@ -153,13 +202,14 @@ router.get('/', (req, res) => {
  *                 type: string
  *                 description: Type of attached media
  *                 example: "image"
+ *                 enum: [image, video, audio, document, sticker]
  *               media_path_name:
  *                 type: string
  *                 description: Path to the media file
  *                 example: "/path/to/media.jpg"
  *               message:
  *                 type: string
- *                 description: Message content
+ *                 description: Message content (for text messages) or caption (for media messages)
  *                 example: "Hello, this is a test message"
  *               unread:
  *                 type: boolean
@@ -181,6 +231,57 @@ router.get('/', (req, res) => {
  *                 type: integer
  *                 description: Chat update timestamp
  *                 example: 1620000000000
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - wa_business_id
+ *               - client_wa_id
+ *             properties:
+ *               wa_business_id:
+ *                 type: string
+ *                 description: WhatsApp Business Account ID
+ *               phone_number_id:
+ *                 type: string
+ *                 description: WA Business phone number ID
+ *               display_phone_number:
+ *                 type: string
+ *                 description: WA Business display phone number
+ *               client_wa_id:
+ *                 type: string
+ *                 description: Client's WhatsApp ID
+ *               client_name:
+ *                 type: string
+ *                 description: Client's name
+ *               message:
+ *                 type: string
+ *                 description: Caption for the media (optional for media messages)
+ *               media_file:
+ *                 type: string
+ *                 format: binary
+ *                 description: Media file to upload (image, video, audio, document, or sticker)
+ *               media_type:
+ *                 type: string
+ *                 description: Type of media being uploaded (will be auto-detected if not provided)
+ *                 enum: [image, video, audio, document, sticker]
+ *               unread_count:
+ *                 type: integer
+ *                 description: Number of unread messages
+ *               thread_status:
+ *                 type: string
+ *                 description: Status of the thread
+ *               current_handler_user_id:
+ *                 type: string
+ *                 description: ID of the current handler user
+ *               unread:
+ *                 type: boolean
+ *                 description: Whether the message is unread
+ *               reply_to:
+ *                 type: string
+ *                 description: ID of message being replied to
+ *               replied_by:
+ *                 type: string
+ *                 description: ID of user who replied
  *     responses:
  *       200:
  *         description: Message sent and chat saved successfully
@@ -213,6 +314,15 @@ router.get('/', (req, res) => {
  *                     is_new_thread:
  *                       type: boolean
  *                       example: true
+ *                     media_id:
+ *                       type: string
+ *                       example: "media123"
+ *                     media_type:
+ *                       type: string
+ *                       example: "image"
+ *                     media_path:
+ *                       type: string
+ *                       example: "/uploads/whatsapp/media-12345.jpg"
  *       400:
  *         description: Bad request or invalid WhatsApp business ID
  *         content:
@@ -250,6 +360,6 @@ router.get('/', (req, res) => {
  *                 data:
  *                   type: null
  */
-router.post('/send-message', (req, res) => chatController.save(req, res));
+router.post('/send-message', upload.single('media_file'), (req, res) => chatController.save(req, res));
 
 module.exports = router;

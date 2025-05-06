@@ -58,13 +58,26 @@ class ChatController {
       }
   
       const timestamp = Date.now();
-  
-      // abis ini call ke wa api
-      const resWaApi = await this.whatsAppServiceAdapter.sendToWhatsapApi({
-        waBusinessId: wa_business_id ?? waConfig.waBusinessId, 
-        clientWaId: client_wa_id, 
-        messageText: message
-      });
+      
+      let resWaApi;
+      // Check if there's a media file from multer middleware
+      if (req.file && req.file.path) {
+        // This is a media message
+        resWaApi = await this.whatsAppServiceAdapter.sendMediaToWhatsapApi({
+          waBusinessId: wa_business_id ?? waConfig.waBusinessId,
+          clientWaId: client_wa_id,
+          mediaFile: req.file,
+          mediaType: media_type || this._determineMediaTypeFromFile(req.file),
+          caption: message || '' // Use message as caption if provided
+        });
+      } else {
+        // This is a text message
+        resWaApi = await this.whatsAppServiceAdapter.sendToWhatsapApi({
+          waBusinessId: wa_business_id ?? waConfig.waBusinessId, 
+          clientWaId: client_wa_id, 
+          messageText: message
+        });
+      }
 
       // If resWaApi failed, throw an error
       if (!resWaApi || !resWaApi.success) {
@@ -72,8 +85,11 @@ class ChatController {
         throw new Error('Failed to send message to WhatsApp API');
       }
 
-      // terus call ke save thread
-      const res = await this.saveChatWithThread.execute({
+      // Update media_id if it was returned from the WhatsApp API
+      const updatedMediaId = (resWaApi.mediaId) ? resWaApi.mediaId : media_id;
+      
+      // Save chat with thread
+      const result = await this.saveChatWithThread.execute({
         waBusinessId: wa_business_id ?? waConfig.waBusinessId,
         clientWaId: client_wa_id,
         clientName: client_name,
@@ -87,10 +103,10 @@ class ChatController {
         internalUserDetail: internal_user_detail ?? [],
         threadCreatedAt: thread_created_at ?? timestamp,
         threadUpdatedAt: thread_updated_at ?? timestamp,
-        wamid: wamid ?? null,
-        mediaId: media_id ?? null,
-        mediaType: media_type ?? null,
-        mediaPathName: media_path_name ?? null,
+        wamid: wamid ?? (resWaApi.result?.messages && resWaApi.result.messages[0]?.id) ?? null,
+        mediaId: updatedMediaId ?? null,
+        mediaType: media_type ?? (req.file ? this._determineMediaTypeFromFile(req.file) : null),
+        mediaPathName: media_path_name ?? (req.file ? req.file.path : null),
         message: message,
         unread: unread,
         replyTo: reply_to ?? null,
@@ -99,23 +115,105 @@ class ChatController {
         chatUpdatedAt: chat_updated_at ?? timestamp,
       });
   
-      res.status(200).json(
+      return res.status(200).json(
         responseFormatter(
           STATUS.SUCCESS, 
           200, 
           'Chat saved successfully', 
           {
-            chat_id: res.chat.id,
-            wamid: res.chat.wamid,
-            thread_id: res.thread.id,
-            is_new_thread : res.isNewThread,
+            chat_id: result.chat.id,
+            wamid: result.chat.wamid,
+            thread_id: result.thread.id,
+            is_new_thread: result.isNewThread,
+            media_id: updatedMediaId
           }
         )
       );
       
     } catch (error) {
       console.error('Error saving chat:', error);
-      res.status(500).json(responseFormatter(STATUS.ERROR, 500, error.message, null));
+      return res.status(500).json(responseFormatter(STATUS.ERROR, 500, error.message, null));
+    }
+  }
+  
+  /**
+   * Determine media type from file mimetype
+   * @param {Object} file - File object from multer
+   * @returns {string} - WhatsApp media type
+   * @private
+   */
+  _determineMediaTypeFromFile(file) {
+    const mimetype = file.mimetype;
+    
+    if (mimetype.startsWith('image/')) {
+      return mimetype === 'image/webp' ? 'sticker' : 'image';
+    } else if (mimetype.startsWith('video/')) {
+      return 'video';
+    } else if (mimetype.startsWith('audio/')) {
+      return 'audio';
+    } else {
+      return 'document';
+    }
+  }
+  
+  /**
+   * Send a media message via WhatsApp
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   */
+  async sendMedia(req, res) {
+    try {
+      const { wa_business_id, client_wa_id, media_type, caption } = req.body;
+      
+      // Check if there's a file upload
+      if (!req.file) {
+        return res.status(400).json(
+          responseFormatter(STATUS.FAIL, 400, 'No media file uploaded', null)
+        );
+      }
+      
+      const waConfig = await this.channelServiceAdapter.getWaConfigByWaBusinessId(wa_business_id);
+      
+      if(!waConfig) {
+        console.error(`Unknown waBusinessId: ${wa_business_id} — ignoring message`);
+        return res.status(400).json(
+          responseFormatter(STATUS.FAIL, 400, `Unknown waBusinessId: ${wa_business_id} — ignoring message`, null)
+        );      
+      }
+      
+      // Determine media type if not provided
+      const determinedMediaType = media_type || this._determineMediaTypeFromFile(req.file);
+      
+      // Send media message
+      const result = await this.whatsAppServiceAdapter.sendMediaToWhatsapApi({
+        waBusinessId: wa_business_id,
+        clientWaId: client_wa_id,
+        mediaFile: req.file,
+        mediaType: determinedMediaType,
+        caption: caption || ''
+      });
+      
+      if (!result || !result.success) {
+        throw new Error('Failed to send media message to WhatsApp API');
+      }
+      
+      return res.status(200).json(
+        responseFormatter(
+          STATUS.SUCCESS,
+          200,
+          'Media message sent successfully',
+          {
+            media_id: result.mediaId,
+            wamid: result.result?.messages && result.result.messages[0]?.id
+          }
+        )
+      );
+      
+    } catch (error) {
+      console.error('Error sending media message:', error);
+      return res.status(500).json(
+        responseFormatter(STATUS.ERROR, 500, error.message, null)
+      );
     }
   }
 }
