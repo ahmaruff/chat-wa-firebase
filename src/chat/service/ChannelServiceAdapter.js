@@ -1,73 +1,103 @@
 const ChannelService = require('../../channels/service/ChannelService');
 const FirestoreChannelRepository = require('../../channels/infrastructure/FirestoreChannelRepository');
+const FirestoreWaConfigRepository = require('../../channels/infrastructure/FirestoreWaConfigRepository');
 
 const firestoreChannelRepository = new FirestoreChannelRepository();
-
-class ChannelServiceAdapter{
+const firestoreWaConfigRepository = new FirestoreWaConfigRepository();
+class ChannelServiceAdapter {
   constructor() {
-    this.channelService = new ChannelService(firestoreChannelRepository);
+    this.channelService = new ChannelService(firestoreChannelRepository, firestoreWaConfigRepository);
   }
 
-  async addWhatsappChannel({wabaId, phoneNumberId, name, displayPhoneNumber, accessToken= null, isActive = null, metadata = {}, participants = []}) {
+  async getAllChannels(activeOnly = false) {
     try {
-      const number = phoneNumberId || wabaId;
-      const channel = await this.channelService.findByPhoneNumber(phoneNumberId);
+      const result = await this.channelService.getAllChannels(activeOnly);
+      return result;
+    } catch (error) {
+      console.error('Chat Channel Adapter: Get all channels failed: ', error);
+      throw error;
+    }
+  }
 
-      if(!channel) {
-        console.log('Chat Channel Adapter - cannot find channel by phone id/waba id');
-        return null;
-      }
+  async getChannelById(id) {
+    try {
+      const result = await this.channelService.getChannelById(id);
+      return result;
+    } catch (error) {
+      console.error('Chat Channel Adapter: Get channel by id failed: ', error);
+      throw error;
+    }
+  }
 
-      const result = await this.channelService.addWhatsAppChannel({
-        channelId: channel.id,
-        wabaId: wabaId,
-        phoneNumberId: phoneNumberId || wabaId,
+  async getChannelByCrmChannelId(crmChannelId) {
+    try {
+      const result = await this.channelService.getChannelByCrmChannelId(crmChannelId);
+      return result;
+    } catch (error) {
+      console.error('Chat Channel Adapter: Get channel by crm channel id failed: ', error);
+      throw error;
+    }
+  }
+
+  async getWaConfigById(id) {
+    try {
+      const result = await this.channelService.getWaConfigById(id);
+      return result;
+    } catch (error) {
+      console.error('Chat Channel Adapter: Get wa config by id failed: ', error);
+      throw error;
+    }
+  }
+
+  async getWaConfigByWaBusinessId(waBusinessId) {
+    try {
+      const result = await this.channelService.getWaConfigByWaBusinessId(waBusinessId);
+      return result;
+    } catch (error) {
+      console.error('Chat Channel Adapter: Get wa config by wa business id failed: ', error);
+      throw error;
+    }
+  }
+
+  async getWaConfigByParticipants(channelId, participantId) {
+    try {
+      const result = await this.channelService.getWaConfigByParticipants(channelId, participantId);
+      return result;
+    } catch (error) {
+      console.error('Chat Channel Adapter: Get wa config by participants failed: ', error);
+      throw error;
+    }
+  }
+
+  async saveWaConfig({
+    id = null,
+    channelId,
+    isActive = true,
+    name,
+    waBusinessId,
+    phoneNumberId,
+    displayPhoneNumber,
+    accessToken,
+    createdAt = Date.now(),
+    updatedAt = Date.now(),
+  }) {
+    try {
+      const result = await this.channelService.saveWaConfig({
+        id: id ?? null,
+        channelId: channelId,
+        isActive: isActive,
         name: name,
+        waBusinessId: waBusinessId,
+        phoneNumberId: phoneNumberId,
         displayPhoneNumber: displayPhoneNumber,
-        accessToken: accessToken || null,
-        isActive: isActive || true,
-        metadata: metadata | {},
-        participants: participants || []
+        accessToken: accessToken,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
       });
 
-      if(!result) {
-        console.log('Chat Channel Adapter - cannot add whatsapp channel');
-
-        return null;
-      }
-
       return result;
     } catch (error) {
-      console.log('Chat Channel Adapter: Error Add Whatsapp Channel: ', error);
-      throw error;
-    }
-  }
-
-  async getWhatsappChannel(wabaId) {
-    try {
-      const result = await this.channelService.findByWabaId(wabaId);
-      
-      if(!result) {
-        return null;
-      }
-
-      return result;
-    } catch (error) {
-      console.log('Chat Channel Adapter: Error Get Whatsapp Channel: ', error);
-      throw error;
-    }
-  }
-
-  async getWhatsappChannelByParticipantId(channelId, participantId) {
-    try {
-      const result = await this.channelService.findByParticipantId(channelId, participantId);
-      if(!result) {
-        return null;
-      }
-
-      return result;
-    } catch (error) {
-      console.log('Chat Channel Adapter: Error Get Whatsapp Channel By participant id: ', error);
+      console.error('Chat Channel Adapter: Save wa config failed: ', error);
       throw error;
     }
   }
