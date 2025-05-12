@@ -23,7 +23,8 @@ class ManageThread {
       const thread = await this.threadRepository.getByWhatsappInfo(waBusinessId, clientWaId);
 
       if (!thread) {
-        throw new Error('Thread not found');
+        console.log(`Thread by wa info waBusinessId: ${waBusinessId} and clientWaId: ${clientWaId} not found`);
+        return null;
       }
 
       return thread;

@@ -50,14 +50,35 @@ class ManageChat{
 
   async markAsReadByWamid(wamid) {
     try {
-      const chat = await this.markAsReadByWamid(wamid);
-      if (!chat) {
+      const isTrue = await this.chatRepository.markAsReadByWamid(wamid);
+      console.log(`marked as read for wamid ${wamid}: `, isTrue);
+      
+      if (!isTrue) {
         throw new Error('Failed marking chat as read');
       }
 
-      return chat;
+      return isTrue;
     } catch (error) {
       console.error('Error marking chat as read by wamid:', error);
+      throw error;
+    }
+  }
+
+  async markAsReadUpToWamid({wamid, phoneNumberId, direction}) {
+    try {
+      const isTrue = await this.chatRepository.markAsReadUpToWamid({
+        wamid: wamid,
+        phone_number_id: phoneNumberId,
+        direction: direction
+      });
+
+      if (!isTrue) {
+        throw new Error(`Failed marking chat as read: ${isTrue}`,);
+      }
+
+      return isTrue;
+    } catch (error) {
+      console.error('Error marking chat as read:', error);
       throw error;
     }
   }

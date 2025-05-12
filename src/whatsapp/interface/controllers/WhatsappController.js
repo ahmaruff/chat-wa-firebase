@@ -1,10 +1,12 @@
 const STATUS = require('../../../shared/constants/statusCodes');
 const responseFormatter = require('../../../shared/utils/responseFormatter');
 const ProcessWhatsappWebhook = require('../../application/usecase/ProcessWhatsappWebhook');
+const SendReadStatus = require('../../application/usecase/SendReadStatus');
 
 class WhatsappController {
   constructor() {
     this.processWhatsappWebhook = new ProcessWhatsappWebhook();
+    this.sendReadStatus = new SendReadStatus();
   }
 
   /**
@@ -21,11 +23,10 @@ class WhatsappController {
         console.log('Received WhatsApp webhook payload:', JSON.stringify(payload, null, 2));
       }
   
-      // Jika ini adalah ping/health check dari WhatsApp
       if (
         payload &&
         payload.object === 'whatsapp_business_account' &&
-        (!payload.entry || !payload.entry[0].changes || !payload.entry[0].changes[0].value.messages)
+        (!payload.entry || !payload.entry[0].changes || (!payload.entry[0].changes[0].value.messages && !payload.entry[0].changes[0].value.statuses))
       ) {
         console.log('Received WhatsApp ping or status update');
         return res.status(200).send('OK');
@@ -56,6 +57,8 @@ class WhatsappController {
         ignored: r.result === 'ignored' ? true : false,
         error: r.error,
       }));
+
+      console.log('processed webhook: ', formattedResults);
   
       // Kirim respons sukses
       return res.status(200).json(
@@ -103,15 +106,33 @@ class WhatsappController {
       if (result.success) {
         console.log('Webhook verification successful');
         // Kirim challenge token sebagai respons
-        res.status(200).send(result.challenge);
+        return res.status(200).send(result.challenge);
       } else {
         console.log('Webhook verification failed');
         // Unauthorized
-        res.sendStatus(403);
+        return res.sendStatus(403);
       }
     } catch (error) {
       console.error('Webhook verification failed:', error);
-      res.sendStatus(403);
+      return res.sendStatus(403);
+    }
+  }
+
+  async markAsRead(req, res) {
+    try {
+      const { wa_business_id, wamid } = req.body;
+      const result = await this.sendReadStatus.send(wa_business_id, wamid);
+      if(!result.success) {
+        return res.status(400).json(responseFormatter(STATUS.FAIL, 400, 'Failed mark as read message'));
+      }
+
+      return res.status(200).json(responseFormatter(STATUS.SUCCESS, 200, 'Success mark as read message', {
+        result: result.result ?? null
+      }));
+    } catch (error) {
+      console.error('Error mark as read message:', error);
+      return res.status(500).json(responseFormatter(STATUS.ERROR, 500, `Failed mark as read message: ${error.message}`));
+
     }
   }
 }

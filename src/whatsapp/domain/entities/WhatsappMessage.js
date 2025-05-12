@@ -1,4 +1,6 @@
 const THREAD_STATUS = require('../../../shared/constants/chatStatus');
+const CHAT_DIRECTION = require('../../../shared/constants/chatDirection');
+
 
 class WhatsappMessage {
   constructor({
@@ -102,19 +104,19 @@ class WhatsappMessage {
               break;
             case 'image':
               mediaType = 'image';
-              body = msg.image?.caption || 'Image';
+              body = msg.image?.caption || '';
               mediaId = msg.image?.id || null;
               mediaPath = msg.image?.mime_type || null;
               break;
             case 'document':
               mediaType = 'document';
-              body = msg.document?.caption || 'Document';
+              body = msg.document?.caption || '';
               mediaId = msg.document?.id || null;
               mediaPath = msg.document?.filename || null;
               break;
             case 'video':
               mediaType = 'video';
-              body = msg.video?.caption || 'Video';
+              body = msg.video?.caption || '';
               mediaId = msg.video?.id || null;
               mediaPath = msg.video?.mime_type || null;
               break;
@@ -196,7 +198,8 @@ class WhatsappMessage {
     replyTo = null,
     repliedBy = null,
     chatCreatedAt = null,
-    chatUpdatedAt = null
+    chatUpdatedAt = null,
+    sender = this.clientWaId
   } = {}) {
     return {
       waBusinessId: this.waBusinessId,
@@ -223,6 +226,8 @@ class WhatsappMessage {
       repliedBy,
       chatCreatedAt: chatCreatedAt || Date.now(),
       chatUpdatedAt: chatUpdatedAt || Date.now(),
+      chatDirection: CHAT_DIRECTION.INBOUND,
+      sender: sender || this.clientWaId
     };
   }  
 }

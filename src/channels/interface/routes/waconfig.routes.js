@@ -19,7 +19,7 @@ const waConfigController = new WaConfigController(firestoreWaConfigRepository, f
  * @swagger
  * /wa-configs:
  *   post:
- *     summary: Create a new WhatsApp Configuration
+ *     summary: Create or update a WhatsApp Configuration
  *     tags: [WaConfigs]
  *     requestBody:
  *       required: true
@@ -35,6 +35,10 @@ const waConfigController = new WaConfigController(firestoreWaConfigRepository, f
  *               - display_phone_number
  *               - access_token
  *             properties:
+ *               id:
+ *                 type: string
+ *                 description: ID of the config
+ *                 example: "fsxFRcsfhteAsfdaXsfG"
  *               channel_id:
  *                 type: string
  *                 description: ID of the channel this WhatsApp config belongs to
@@ -64,6 +68,10 @@ const waConfigController = new WaConfigController(firestoreWaConfigRepository, f
  *                 type: string
  *                 description: Access token for WhatsApp API
  *                 example: "EAAJZCZCx..."
+ *               created_at:
+ *                 type: integer
+ *                 description: timestamp in ms (epoch)
+ *                 example: 123143254365
  *               participants:
  *                 type: array
  *                 description: List of participant IDs who can access this WhatsApp channel

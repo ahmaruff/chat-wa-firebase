@@ -1,3 +1,5 @@
+const EncryptionService = require('../../../shared/utils/EncryptionService');
+
 class WaConfig {
   constructor({
     id,
@@ -74,6 +76,16 @@ class WaConfig {
       createdAt: data.created_at,
       updatedAt: data.updated_at,
     });
+  }
+
+  getToken(){
+    try {
+      const t = EncryptionService.decrypt(this.accessToken);
+      return t;
+    } catch (error) {
+      console.error('Error getToken', error);
+      throw error;
+    }
   }
 }
 

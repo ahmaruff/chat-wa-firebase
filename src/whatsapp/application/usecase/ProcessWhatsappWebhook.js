@@ -1,7 +1,8 @@
 const WhatsappMessage = require('../../domain/entities/WhatsappMessage');
-const config = require('../../../shared/utils/configs');
 const ChannelServiceAdapter = require('../../services/ChannelServiceAdapter');
 const ChatServiceAdapter = require('../../services/ChatServiceAdapter');
+const config = require('../../../shared/utils/configs');
+const CHAT_DIRECTION = require('../../../shared/constants/chatDirection');
 class ProcessWhatsappWebhook {
   constructor() {
     this.chatServiceAdapter = new ChatServiceAdapter();
@@ -39,12 +40,17 @@ class ProcessWhatsappWebhook {
           if (msg.type === 'status') {
             // Only mark as read if status is 'read'
             if (msg.status === 'read') {
-              const res = await this.chatServiceAdapter.markAsRead(msg.wamid);
+              const isTrue = await this.chatServiceAdapter.markAsReadUpToWamid({
+                wamid: msg.wamid,
+                phoneNumberId: msg.phoneNumberId,
+                direction: CHAT_DIRECTION.OUTBOUND
+              });
+
               results.push({
                 type: 'status',
                 status: msg.status,
                 from: msg.from,
-                result: res,
+                result: isTrue,
               });
             } else {
               console.log(`Ignoring status: ${msg.status} for message ${msg.wamid}`);

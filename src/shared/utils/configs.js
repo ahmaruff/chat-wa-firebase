@@ -2,11 +2,6 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const config = {
-  wa_config : {
-    phone_number_id: process.env.WA_BUSSINESS_ID_PHONE_NUMBER,
-    display_phone_number: process.env.WA_BUSINESS_DISPLAY_PHONE_NUMBER,
-    access_token: process.env.WA_BUSINESS_ACCESS_TOKEN
-  },
   firebase: {
     service_account_path: process.env.FIREBASE_SERVICE_ACCOUNT_PATH,
     database_url: process.env.FIREBASE_DATABASE_URL,
@@ -17,6 +12,10 @@ const config = {
   },
   whatsapp: {
     verify_token: process.env.WHATSAPP_VERIFY_TOKEN,
+    api_base_url: process.env.WHATSAPP_API_BASE_URL ?? "https://graph.facebook.com/v22.0",
+  },
+  encryption: {
+    key: process.env.ENCRYPTION_KEY
   }
 }
 

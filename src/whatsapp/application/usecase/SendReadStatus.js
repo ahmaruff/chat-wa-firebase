@@ -1,18 +1,20 @@
 const ChannelServiceAdapter = require('../../services/ChannelServiceAdapter');
+const ChatServiceAdapter = require('../../services/ChatServiceAdapter');
 
 const config = require('../../../shared/utils/configs');
 const WHATSAPP_API_BASE_URL = config.whatsapp.api_base_url;
 
-class SendMessage {
+const CHAT_DIRECTION = require('../../../shared/constants/chatDirection');
+class SendReadStatus{
   constructor() {
     this.channelServiceAdapter = new ChannelServiceAdapter();
+    this.chatServiceAdapter = new ChatServiceAdapter();
   }
-
   static generateApiUrl(phoneNumberId) {
     return `${WHATSAPP_API_BASE_URL}/${phoneNumberId}/messages`;
   }
 
-  async send({ waBusinessId, clientWaId, messageText }) {
+  async send(waBusinessId, wamid) {
     const waConfig = await this.channelServiceAdapter.getWaConfigByWaBusinessId(waBusinessId);
 
     if (!waConfig) {
@@ -25,20 +27,10 @@ class SendMessage {
       return null;
     }
 
-    console.log('waBusinessId: ', waConfig.waBusinessId);
-    console.log('phoneNumberId: ', waConfig.phoneNumberId);
-    console.log('clientWaId: ', clientWaId);
-
-    const url = SendMessage.generateApiUrl(waConfig.phoneNumberId);
+    const url = SendReadStatus.generateApiUrl(waConfig.phoneNumberId);
     console.log('send to whatsapp api url: ', url);
 
     try {
-      // Remove the 'whatsapp:' prefix if it's there
-      const recipientNumber = clientWaId.replace('whatsapp:', '');
-      if (!recipientNumber) {
-        throw new Error("Recipient number is invalid.");
-      }
-
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -47,8 +39,8 @@ class SendMessage {
         },
         body: JSON.stringify({
           messaging_product: 'whatsapp',
-          to: recipientNumber,
-          text: { body: messageText },
+          status: "read",
+          message_id: wamid,
         }),
       });
 
@@ -61,15 +53,25 @@ class SendMessage {
 
       console.log('Message sent successfully:', result);
 
+      try {
+        const isReadAll = await this.chatServiceAdapter.markAsReadUpToWamid({
+          wamid: wamid,
+          phoneNumberId: waConfig.phoneNumberId,
+          direction: CHAT_DIRECTION.INBOUND,
+        });
+      } catch (error) {
+        console.error('Error marking all chat:', error);
+      }
+
       return {
         success: true,
         result: result,
       };
     } catch (error) {
-      console.error(`Failed to send message:`, error);
+      console.error(`Failed to send read status:`, error);
       throw error;
     }
   }
 }
 
-module.exports = SendMessage;
+module.exports = SendReadStatus;

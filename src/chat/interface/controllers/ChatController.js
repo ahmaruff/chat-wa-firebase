@@ -4,12 +4,12 @@ const SaveChatWithThread = require('../../application/usecase/SaveChatWithThread
 
 const THREAD_STATUS = require('../../../shared/constants/chatStatus');
 const STATUS = require('../../../shared/constants/statusCodes');
+const CHAT_DIRECTION = require('../../../shared/constants/chatDirection');
 const responseFormatter = require('../../../shared/utils/responseFormatter');
 
-const config = require('../../../shared/utils/configs');
-const Thread = require('../../domain/entities/Thread');
 const ChannelServiceAdapter = require('../../service/ChannelServiceAdapter');
 const WhatsAppServiceAdapter = require('../../service/WhatsAppServiceAdapter');
+const path = require('path');
 
 class ChatController {
   constructor(threadRepository, chatRepository) {
@@ -26,35 +26,28 @@ class ChatController {
     try {
       const {
         wa_business_id,
-        phone_number_id,
-        display_phone_number,
         client_wa_id,
         client_name,
-        unread_count,
-        thread_status,
-        first_response_datetime,
-        last_response_datetime,
         current_handler_user_id,
         internal_user_detail,
-        thread_created_at,
-        thread_updated_at,
-        wamid,
-        media_id,
-        media_type,
-        media_path_name,
         message,
         unread,
         reply_to,
         replied_by,
-        chat_created_at,
-        chat_updated_at,
       } = req.body;
+
+      const parsedUnread = (unread === 'false' || unread === false) ? false : true;
   
       const waConfig = await this.channelServiceAdapter.getWaConfigByWaBusinessId(wa_business_id);
   
       if(!waConfig) {
         console.error(`Unknown waBusinessId: ${wa_business_id} — ignoring message`);
         return res.status(400).json(responseFormatter(STATUS.FAIL, 400, `Unknown waBusinessId: ${wa_business_id} — ignoring message`, null));      
+      }
+
+      if(!waConfig.isActive) {
+        console.error(`Config waBusinessId: ${wa_business_id} INACTIVE — ignoring message`);
+        return res.status(400).json(responseFormatter(STATUS.FAIL, 400, `Config waBusinessId: ${wa_business_id} INACTIVE — ignoring message`, null));      
       }
   
       const timestamp = Date.now();
@@ -67,7 +60,7 @@ class ChatController {
           waBusinessId: wa_business_id ?? waConfig.waBusinessId,
           clientWaId: client_wa_id,
           mediaFile: req.file,
-          mediaType: media_type || this._determineMediaTypeFromFile(req.file),
+          mediaType: this._determineMediaTypeFromFile(req.file),
           caption: message || '' // Use message as caption if provided
         });
       } else {
@@ -86,34 +79,47 @@ class ChatController {
       }
 
       // Update media_id if it was returned from the WhatsApp API
-      const updatedMediaId = (resWaApi.mediaId) ? resWaApi.mediaId : media_id;
-      
-      // Save chat with thread
+      const updatedMediaId = (resWaApi.mediaId) ? resWaApi.mediaId : null;
+
+      console.log(`Getting thread for waBusinessId: ${wa_business_id}, clientWaId: ${client_wa_id}`);
+      const t = await this.manageThread.getByWhatsappInfo(wa_business_id, client_wa_id);
+
+      // Log thread yang ditemukan untuk debugging
+      console.log('Thread found in controller:', {
+        found: !!t,
+        id: t?.id,
+        status: t?.status
+      });
+
+      // Save chat with thread dengan parameter yang konsisten
       const result = await this.saveChatWithThread.execute({
         waBusinessId: wa_business_id ?? waConfig.waBusinessId,
         clientWaId: client_wa_id,
         clientName: client_name,
-        phoneNumberId: phone_number_id,
-        displayPhoneNumber: display_phone_number,
-        unreadCount: unread_count,
-        threadStatus: thread_status,
-        firstResponseDatetime: first_response_datetime ?? timestamp,
-        lastResponseDatetime: last_response_datetime ?? null,
-        currentHandlerUserId: current_handler_user_id ?? null,
-        internalUserDetail: internal_user_detail ?? [],
-        threadCreatedAt: thread_created_at ?? timestamp,
-        threadUpdatedAt: thread_updated_at ?? timestamp,
-        wamid: wamid ?? (resWaApi.result?.messages && resWaApi.result.messages[0]?.id) ?? null,
+        phoneNumberId: waConfig.phoneNumberId,
+        displayPhoneNumber: waConfig.displayPhoneNumber,
+        unreadCount: t?.unreadCount ?? 0,
+        threadStatus: t?.status ?? THREAD_STATUS.QUEUE,
+        firstResponseDatetime: t?.firstResponseDatetime ?? null,
+        lastResponseDatetime: t?.lastResponseDatetime ?? null,
+        currentHandlerUserId: current_handler_user_id ?? t?.currentHandlerUserId ?? null,
+        internalUserDetail: internal_user_detail ?? t?.internalUserDetail ?? [],
+        threadCreatedAt: t?.createdAt ?? timestamp,
+        threadUpdatedAt: timestamp,
+        wamid: (resWaApi.result?.messages && resWaApi.result.messages[0]?.id) ?? null,
         mediaId: updatedMediaId ?? null,
-        mediaType: media_type ?? (req.file ? this._determineMediaTypeFromFile(req.file) : null),
-        mediaPathName: media_path_name ?? (req.file ? req.file.path : null),
-        message: message,
-        unread: unread,
+        mediaType: (req.file ? this._determineMediaTypeFromFile(req.file) : null),
+        mediaPathName: this._determineFilePathName(req),
+        message: message || '',
+        unread: parsedUnread,
         replyTo: reply_to ?? null,
         repliedBy: replied_by ?? null,
-        chatCreatedAt: chat_created_at ?? timestamp,
-        chatUpdatedAt: chat_updated_at ?? timestamp,
+        chatCreatedAt: timestamp,
+        chatUpdatedAt: timestamp,
+        chatDirection: CHAT_DIRECTION.OUTBOUND,
+        sender: waConfig.displayPhoneNumber,
       });
+      console.log('save chat to thread:', result);
   
       return res.status(200).json(
         responseFormatter(
@@ -155,6 +161,17 @@ class ChatController {
       return 'document';
     }
   }
+
+  _determineFilePathName(req) {
+    if(req.file) {
+      const mime = this._determineMediaTypeFromFile(req.file);
+      if(mime == 'document') {
+        return path.basename(req.file.path) ?? null;
+      }
+      return req.file.mimetype ?? null;
+    }
+    return null;
+  }
   
   /**
    * Send a media message via WhatsApp
@@ -179,6 +196,11 @@ class ChatController {
         return res.status(400).json(
           responseFormatter(STATUS.FAIL, 400, `Unknown waBusinessId: ${wa_business_id} — ignoring message`, null)
         );      
+      }
+
+      if(!waConfig.isActive) {
+        console.error(`Config waBusinessId: ${wa_business_id} INACTIVE — ignoring message`);
+        return res.status(400).json(responseFormatter(STATUS.FAIL, 400, `Config waBusinessId: ${wa_business_id} INACTIVE — ignoring message`, null));      
       }
       
       // Determine media type if not provided
@@ -243,8 +265,13 @@ class ChatController {
         );
       }
 
+      if(!waConfig.isActive) {
+        console.error(`Config waBusinessId: ${wa_business_id} INACTIVE — ignoring message`);
+        return res.status(400).json(responseFormatter(STATUS.FAIL, 400, `Config waBusinessId: ${wa_business_id} INACTIVE — ignoring message`, null));      
+      }
+
       // Generate base URL for proxy
-      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const baseUrl = `${req.protocol}://${req.get('host')}/api/chats`;
 
       // Get media info using the adapter
       const mediaInfo = await this.whatsAppServiceAdapter.getMediaInfo({
@@ -312,6 +339,11 @@ class ChatController {
         );
       }
 
+      if(!waConfig.isActive) {
+        console.error(`Config waBusinessId: ${wa_business_id} INACTIVE — ignoring message`);
+        return res.status(400).json(responseFormatter(STATUS.FAIL, 400, `Config waBusinessId: ${wa_business_id} INACTIVE — ignoring message`, null));      
+      }
+
       // Stream media directly to response using the adapter
       await this.whatsAppServiceAdapter.streamMedia({
         waBusinessId: wa_business_id,
@@ -343,6 +375,25 @@ class ChatController {
           responseFormatter(STATUS.ERROR, 500, error.message, null)
         );
       }
+    }
+  }
+
+  async getThread(req, res) {
+    try {
+      const {
+        wa_business_id,
+        client_wa_id,
+      } = req.body;
+  
+      const x = await this.manageThread.getByWhatsappInfo(wa_business_id, client_wa_id);
+  
+      return res.status(200).json(responseFormatter(STATUS.SUCCESS, 200, 'get thread succes', {
+        thread: x
+      }));
+    } catch (error) {
+      return res.status(500).json(
+        responseFormatter(STATUS.ERROR, 500, error.message, null)
+      );
     }
   }
 }

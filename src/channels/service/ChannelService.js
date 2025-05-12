@@ -2,6 +2,7 @@ const ManageChannel = require('../application/usecase/ManageChannel');
 const ManageWaConfig = require('../application/usecase/ManageWaConfig');
 const Channel = require('../domain/entities/Channel');
 const WaConfig = require('../domain/entities/WaConfig');
+const EncryptionService = require('../../shared/utils/EncryptionService');
 
 class ChannelService {
   constructor(channelRepository, waConfigRepository) {
@@ -94,6 +95,8 @@ class ChannelService {
     updatedAt
   }) {
     try {
+      const encypted = EncryptionService.encrypt(accessToken);
+
       const wa = new WaConfig({
         id: id,
         channelId: channelId,
@@ -102,7 +105,7 @@ class ChannelService {
         waBusinessId: waBusinessId,
         phoneNumberId: phoneNumberId,
         displayPhoneNumber: displayPhoneNumber,
-        accessToken: accessToken,
+        accessToken: encypted,
         createdAt: createdAt ?? Date.now(),
         updatedAt: updatedAt ?? Date.now(),
       });

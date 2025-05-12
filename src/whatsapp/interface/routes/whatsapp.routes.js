@@ -183,4 +183,85 @@ router.get('/webhook', (req, res) => whatsappController.webhookGet(req, res));
  */
 router.post('/webhook', (req, res) => whatsappController.webhookPost(req, res));
 
+/**
+ * @swagger
+ * /whatsapp/mark-as-read:
+ *   post:
+ *     summary: Mark a WhatsApp message as read
+ *     description: Sets a message as read based on the provided wa_business_id and wamid.
+ *     tags: [WhatsApp]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - wa_business_id
+ *               - wamid
+ *             properties:
+ *               wa_business_id:
+ *                 type: string
+ *                 example: "1234567890"
+ *               wamid:
+ *                 type: string
+ *                 example: "wamid.HBgLMjAyMzEyMzEyMzEyFQIAERgSNzFEM0I2MkYyRjA1RkJFMzkA"
+ *     responses:
+ *       200:
+ *         description: Success mark as read message
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: Success mark as read message
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     result:
+ *                       type: object
+ *                       nullable: true
+ *       400:
+ *         description: Failed to mark message as read
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: Failed mark as read message
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: Failed mark as read message Unexpected error
+ */
+router.post('/mark-as-read', (req, res) => whatsappController.markAsRead(req, res));
+
 module.exports = router;

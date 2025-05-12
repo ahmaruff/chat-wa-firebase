@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const os = require('os'); 
 
 const ChatController = require('../controllers/ChatController');
 const FirestoreThreadRepository = require('../../infrastructure/FirestoreThreadRepository');
@@ -11,11 +12,19 @@ const FirestoreChatRepository = require('../../infrastructure/FirestoreChatRepos
 // Configure multer for media file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadDir = path.join(__dirname, '../../../uploads/whatsapp');
+    const uploadDir = path.resolve(__dirname, '../../../../uploads/whatsapp'); 
+
     // Create directory if it doesn't exist
     if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+      if (os.platform() !== 'win32') {
+        // Only set mode on Unix-like systems (not Windows)
+        fs.mkdirSync(uploadDir, { recursive: true, mode: 0o755 });
+      } else {
+        // No need to set mode on Windows
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
     }
+
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
@@ -39,13 +48,22 @@ const upload = multer({
       'document': ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
       'sticker': ['image/webp']
     };
-    
-    // Accept all valid WhatsApp media types
+
     const validMimetypes = Object.values(validTypes).flat();
-    if (validMimetypes.includes(file.mimetype)) {
+    const validExtensions = [
+      '.jpg', '.jpeg', '.png', '.webp',
+      '.mp4', '.3gp',
+      '.mp3', '.mpeg', '.ogg', '.amr',
+      '.pdf', '.doc', '.docx'
+    ];
+
+    const mime = file.mimetype;
+    const ext = path.extname(file.originalname).toLowerCase();
+
+    if (validMimetypes.includes(mime) || (mime === 'application/octet-stream' && validExtensions.includes(ext))) {
       cb(null, true);
     } else {
-      cb(new Error(`Invalid file type. Allowed types: ${validMimetypes.join(', ')}`), false);
+      cb(new Error(`Invalid file type. Allowed types: ${validExtensions.join(', ')}`), false);
     }
   }
 });
@@ -110,20 +128,13 @@ router.get('/', (req, res) => {
  *             required:
  *               - wa_business_id
  *               - client_wa_id
+ *               - client_name
  *               - message
  *             properties:
  *               wa_business_id:
  *                 type: string
  *                 description: WhatsApp Business Account ID
  *                 example: "1234567890"
- *               phone_number_id:
- *                 type: string
- *                 description: WA Business phone number ID
- *                 example: "12345"
- *               display_phone_number:
- *                 type: string
- *                 description: WA Business display phone number
- *                 example: "6281234567890"
  *               client_wa_id:
  *                 type: string
  *                 description: Client's WhatsApp ID
@@ -132,22 +143,6 @@ router.get('/', (req, res) => {
  *                 type: string
  *                 description: Client's name
  *                 example: "John Doe"
- *               unread_count:
- *                 type: integer
- *                 description: Number of unread messages
- *                 example: 1
- *               thread_status:
- *                 type: string
- *                 description: Status of the thread
- *                 example: "OPEN"
- *               first_response_datetime:
- *                 type: integer
- *                 description: Timestamp of first response
- *                 example: 1620000000000
- *               last_response_datetime:
- *                 type: integer
- *                 description: Timestamp of last response
- *                 example: 1620000000000
  *               current_handler_user_id:
  *                 type: string
  *                 description: ID of the current handler user
@@ -182,31 +177,6 @@ router.get('/', (req, res) => {
  *                       type: integer
  *                       description: Timestamp of last response
  *                       example: 1620100000000
- *               thread_created_at:
- *                 type: integer
- *                 description: Thread creation timestamp
- *                 example: 1620000000000
- *               thread_updated_at:
- *                 type: integer
- *                 description: Thread update timestamp
- *                 example: 1620000000000
- *               wamid:
- *                 type: string
- *                 description: WhatsApp message ID
- *                 example: "wamid.abcd1234"
- *               media_id:
- *                 type: string
- *                 description: ID of attached media (if any)
- *                 example: "media123"
- *               media_type:
- *                 type: string
- *                 description: Type of attached media
- *                 example: "image"
- *                 enum: [image, video, audio, document, sticker]
- *               media_path_name:
- *                 type: string
- *                 description: Path to the media file
- *                 example: "/path/to/media.jpg"
  *               message:
  *                 type: string
  *                 description: Message content (for text messages) or caption (for media messages)
@@ -223,30 +193,18 @@ router.get('/', (req, res) => {
  *                 type: string
  *                 description: ID of user who replied
  *                 example: "user456"
- *               chat_created_at:
- *                 type: integer
- *                 description: Chat creation timestamp
- *                 example: 1620000000000
- *               chat_updated_at:
- *                 type: integer
- *                 description: Chat update timestamp
- *                 example: 1620000000000
  *         multipart/form-data:
  *           schema:
  *             type: object
  *             required:
  *               - wa_business_id
  *               - client_wa_id
+ *               - client_name
+ *               - message
  *             properties:
  *               wa_business_id:
  *                 type: string
  *                 description: WhatsApp Business Account ID
- *               phone_number_id:
- *                 type: string
- *                 description: WA Business phone number ID
- *               display_phone_number:
- *                 type: string
- *                 description: WA Business display phone number
  *               client_wa_id:
  *                 type: string
  *                 description: Client's WhatsApp ID
@@ -260,16 +218,6 @@ router.get('/', (req, res) => {
  *                 type: string
  *                 format: binary
  *                 description: Media file to upload (image, video, audio, document, or sticker)
- *               media_type:
- *                 type: string
- *                 description: Type of media being uploaded (will be auto-detected if not provided)
- *                 enum: [image, video, audio, document, sticker]
- *               unread_count:
- *                 type: integer
- *                 description: Number of unread messages
- *               thread_status:
- *                 type: string
- *                 description: Status of the thread
  *               current_handler_user_id:
  *                 type: string
  *                 description: ID of the current handler user
@@ -667,5 +615,136 @@ router.get('/media/:mediaId', (req, res) => chatController.getMediaInfo(req, res
  *                   type: null
  */
 router.get('/proxy-media/:mediaId', (req, res) => chatController.proxyMedia(req, res));
+
+
+/**
+ * @swagger
+ * /chats/get-thread:
+ *   post:
+ *     summary: Get a thread by WhatsApp information
+ *     description: Retrieves a thread based on WhatsApp business ID and client WhatsApp ID
+ *     tags: [Chats]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - wa_business_id
+ *               - client_wa_id
+ *             properties:
+ *               wa_business_id:
+ *                 type: string
+ *                 description: The WhatsApp Business ID
+ *                 example: "123456789012345"
+ *               client_wa_id:
+ *                 type: string
+ *                 description: The client's WhatsApp ID (phone number with country code)
+ *                 example: "628123456789"
+ *     responses:
+ *       200:
+ *         description: Thread retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "SUCCESS"
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "get thread success"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     thread:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                           example: "abc123def456"
+ *                         waBusinessId:
+ *                           type: string
+ *                           example: "123456789012345"
+ *                         clientWaId:
+ *                           type: string
+ *                           example: "628123456789"
+ *                         clientName:
+ *                           type: string
+ *                           example: "John Doe"
+ *                         phoneNumberId:
+ *                           type: string
+ *                           example: "987654321098765"
+ *                         displayPhoneNumber:
+ *                           type: string
+ *                           example: "+628123456789"
+ *                         unreadCount:
+ *                           type: integer
+ *                           example: 5
+ *                         status:
+ *                           type: integer
+ *                           example: 1
+ *                           description: "Thread status (0: QUEUE, 1: PROCESSED, 2: COMPLETED)"
+ *                         lastMessageMediaType:
+ *                           type: string
+ *                           example: "image"
+ *                           nullable: true
+ *                         lastMessage:
+ *                           type: string
+ *                           example: "Hello, how can I help you?"
+ *                         firstResponseDatetime:
+ *                           type: integer
+ *                           example: 1682341234567
+ *                         lastResponseDatetime:
+ *                           type: integer
+ *                           example: 1682341234567
+ *                           nullable: true
+ *                         currentHandlerUserId:
+ *                           type: string
+ *                           example: "user123"
+ *                           nullable: true
+ *                         internalUserDetail:
+ *                           type: array
+ *                           items:
+ *                             type: object
+ *                             properties:
+ *                               userId:
+ *                                 type: string
+ *                                 example: "user123"
+ *                               displayName:
+ *                                 type: string
+ *                                 example: "Agent Smith"
+ *                         createdAt:
+ *                           type: integer
+ *                           example: 1682341230000
+ *                         updatedAt:
+ *                           type: integer
+ *                           example: 1682341234567
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "ERROR" 
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: "Internal server error"
+ *                 data:
+ *                   type: null
+ *                   nullable: true
+ */
+router.post('/get-thread', (req, res) => chatController.getThread(req, res));
 
 module.exports = router;

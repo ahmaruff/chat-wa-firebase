@@ -36,3 +36,5 @@ backend/dist/
 
 # TypeScript artifacts
 *.tsbuildinfo
+
+uploads/

@@ -1,5 +1,8 @@
 const ChannelServiceAdapter = require('../../services/ChannelServiceAdapter');
 
+const config = require('../../../shared/utils/configs');
+const WHATSAPP_API_BASE_URL = config.whatsapp.api_base_url;
+
 /**
  * Use case for retrieving WhatsApp media information
  */
@@ -23,13 +26,18 @@ class GetMediaInfo {
       throw new Error(`Unknown waBusinessId: ${waBusinessId}`);
     }
 
+    if(!waConfig.isActive) {
+      console.error(`Config waBusinessId: ${wa_business_id} INACTIVE — ignoring message`);
+      throw new Error(`Config waBusinessId: ${wa_business_id} INACTIVE`);
+    }
+
     try {
       // Get the media metadata from Graph API
       const mediaResponse = await fetch(
-        `https://graph.facebook.com/v20.0/${mediaId}`,
+        `${WHATSAPP_API_BASE_URL}/${mediaId}`,
         {
           headers: { 
-            Authorization: `Bearer ${waConfig.accessToken}`
+            Authorization: `Bearer ${waConfig.getToken()}`
           },
         }
       );
@@ -50,7 +58,7 @@ class GetMediaInfo {
       const fileResponse = await fetch(fileUrl, {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${waConfig.accessToken}`
+          Authorization: `Bearer ${waConfig.getToken()}`
         }
       });
 
@@ -62,7 +70,7 @@ class GetMediaInfo {
       const mimeType = fileResponse.headers.get('content-type');
 
       // Generate a proxy URL for the client to use
-      const proxiedUrl = `${baseUrl}/media-proxy/${mediaId}?waBusinessId=${waBusinessId}`;
+      const proxiedUrl = `${baseUrl}/proxy-media/${mediaId}?wa_business_id=${waBusinessId}`;
 
       // Return the media information
       return {

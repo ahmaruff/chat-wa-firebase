@@ -72,7 +72,7 @@ class FirestoreChatRepository extends ChatRepository {
 
         await chatDocRef.update(dataChat);        
         console.log(`Updated chat with ID: ${chat.id}`);
-        const updatedDoc = await docRef.get();
+        const updatedDoc = await chatDocRef.get();
         return this._documentToEntity(updatedDoc);
       } else {
         // create new doc
@@ -84,7 +84,7 @@ class FirestoreChatRepository extends ChatRepository {
         await chatDocRef.set(dataChat);
         console.log(`Created new entity with ID: ${dataChat.id}`);
 
-        const snapshot = await docRef.get();
+        const snapshot = await chatDocRef.get();
         return this._documentToEntity(snapshot);
       }
     } catch (error) {
@@ -128,7 +128,56 @@ class FirestoreChatRepository extends ChatRepository {
       console.error('Error marking chat as read:', error);
       throw error;
     }
-  }  
+  } 
+  
+  async markAsReadUpToWamid({ wamid, phone_number_id, direction }) {
+    try {
+      const timestamp = Date.now();
+      console.log(`[DEBUG] Searching wamid: ${wamid}`);
+  
+      // 1. Ambil chat dengan wamid tertentu untuk mendapatkan created_at referensi
+      const wamidSnapshot = await this.chatCollection
+        .where('wamid', '==', wamid)
+        .limit(1)
+        .get();
+  
+      if (wamidSnapshot.empty) {
+        console.warn(`No chat found with wamid: ${wamid}`);
+        return false;
+      }
+  
+      const targetChat = wamidSnapshot.docs[0];
+      const referenceTime = targetChat.data().created_at;
+  
+      // 2. Ambil semua chat yang cocok dengan kondisi:
+      // unread === true, created_at <= referenceTime, client_wa_id dan phone_number_id sesuai
+      const querySnapshot = await this.chatCollection
+        .where('client_wa_id', '==', targetChat.data().client_wa_id)
+        .where('phone_number_id', '==', phone_number_id)
+        .where('unread', '==', true)
+        .where('direction', '==', direction)
+        .where('created_at', '<=', referenceTime)
+        .get();
+  
+      if (querySnapshot.empty) {
+        console.log('No unread chats found for this criteria.');
+        return true;
+      }
+  
+      // 3. Update semua chat hasil query
+      const updates = querySnapshot.docs.map(doc =>
+        doc.ref.update({ unread: false, updated_at: timestamp })
+      );
+  
+      await Promise.all(updates);
+      return true;
+  
+    } catch (error) {
+      console.error('Error in markAsReadUpToWamid:', error);
+      throw error;
+    }
+  }
+  
 
   async markThreadAsRead(threadId) {
     try {

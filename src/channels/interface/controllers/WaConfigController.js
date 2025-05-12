@@ -2,6 +2,7 @@ const STATUS = require("../../../shared/constants/statusCodes");
 const responseFormatter = require("../../../shared/utils/responseFormatter");
 const ManageWaConfig = require("../../application/usecase/ManageWaConfig");
 const WaConfig = require("../../domain/entities/WaConfig");
+const EncryptionService = require('../../../shared/utils/EncryptionService');
 
 class WaConfigController {
   constructor(waConfigRepository, channelRepository) {
@@ -13,6 +14,7 @@ class WaConfigController {
   async save(req, res) {
     try {
       const {
+        id,
         channel_id,
         is_active = true,
         name,
@@ -20,11 +22,12 @@ class WaConfigController {
         phone_number_id,
         display_phone_number,
         access_token,
-        participants
+        participants,
+        created_at
       } = req.body;
 
       const waConfig = new WaConfig({
-        id: null,
+        id: id || null,
         channelId: channel_id,
         isActive: is_active,
         name: name,
@@ -32,7 +35,8 @@ class WaConfigController {
         phoneNumberId: phone_number_id,
         displayPhoneNumber: display_phone_number,
         accessToken: access_token,
-        participants: participants ?? []
+        participants: participants ?? [],
+        createdAt: created_at || Date.now()
       });
 
       const wa = await this.manageWaConfig.save(waConfig);

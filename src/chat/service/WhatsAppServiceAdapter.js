@@ -49,6 +49,7 @@ class WhatsAppServiceAdapter {
         mediaType,
         caption
       });
+      console.log('send media to wa: ', result);
 
       return result;
     } catch (error) {
@@ -68,7 +69,7 @@ class WhatsAppServiceAdapter {
   async getMediaInfo({ waBusinessId, mediaId, baseUrl }) {
     try {
       // Call the getMediaInfo method
-      const result = await this.whatsappService.getMediaInfo({
+      const result = await this.whatsappService.mediaInfo({
         waBusinessId,
         mediaId,
         baseUrl

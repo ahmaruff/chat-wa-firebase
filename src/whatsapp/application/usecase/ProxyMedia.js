@@ -1,6 +1,9 @@
 const { Readable } = require('stream');
 const ChannelServiceAdapter = require('../../services/ChannelServiceAdapter');
 
+const config = require('../../../shared/utils/configs');
+const WHATSAPP_API_BASE_URL = config.whatsapp.api_base_url;
+
 /**
  * Use case for proxying WhatsApp media content
  */
@@ -24,12 +27,17 @@ class ProxyMedia {
       throw new Error(`Unknown waBusinessId: ${waBusinessId}`);
     }
 
+    if(!waConfig.isActive) {
+      console.error(`Config waBusinessId: ${wa_business_id} INACTIVE — ignoring message`);
+      throw new Error(`Config waBusinessId: ${wa_business_id} INACTIVE`);
+    }
+
     try {
       // Get the media URL from Graph API
       const mediaResponse = await fetch(
-        `https://graph.facebook.com/v20.0/${mediaId}`,
+        `${WHATSAPP_API_BASE_URL}/${mediaId}`,
         { 
-          headers: { Authorization: `Bearer ${waConfig.accessToken}` } 
+          headers: { Authorization: `Bearer ${waConfig.getToken()}` } 
         }
       );
 
@@ -49,7 +57,7 @@ class ProxyMedia {
       const fileResponse = await fetch(fileUrl, {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${waConfig.accessToken}`
+          Authorization: `Bearer ${waConfig.getToken()}`
         }
       });
 

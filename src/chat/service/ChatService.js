@@ -61,6 +61,7 @@ class ChatService {
       });
 
       const result = await this.manageThread.save(t);
+      return result;
     } catch (error) {
       console.error('Error create thread:', error);
       throw error;
@@ -101,7 +102,9 @@ class ChatService {
     replyTo,
     repliedBy,
     chatCreatedAt,
-    chatUpdatedAt
+    chatUpdatedAt,
+    chatDirection,
+    sender
   }) {
     try {
       const result = await this.saveChatWithThread.execute({
@@ -127,7 +130,9 @@ class ChatService {
         replyTo: replyTo ?? null,
         repliedBy: repliedBy ?? null,
         chatCreatedAt: chatCreatedAt,
-        chatUpdatedAt: chatUpdatedAt
+        chatUpdatedAt: chatUpdatedAt,
+        chatDirection: chatDirection,
+        sender: sender,
       });
 
       console.log('success create chat from external source:', result);
@@ -141,11 +146,26 @@ class ChatService {
 
   async markAsRead(wamid){
     try {
-      const result = await this.manageChat.markAsReadByWamid(wamid);
+      const isTrue = await this.manageChat.markAsReadByWamid(wamid);
 
-      return result;
+      return isTrue;
     } catch (error) {
       console.error('Error marking as read chat by wamid:', error);
+      throw error;
+    }
+  }
+
+  async markAsReadUpToWamid({wamid, phoneNumberId, direction}) {
+    try {
+      const isTrue = await this.manageChat.markAsReadUpToWamid({
+        wamid,
+        phoneNumberId,
+        direction
+      });
+
+      return isTrue;
+    } catch (error) {
+      console.error('Error marking as read:', error);
       throw error;
     }
   }

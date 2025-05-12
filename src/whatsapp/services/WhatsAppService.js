@@ -67,6 +67,11 @@ class WhatsAppService {
         caption: caption || '', // Make caption optional
       });
 
+      if(!result.success) {
+        console.error("Failed send media to whatsapp:", result);
+        throw new Error("Failed send media to whatsapp");
+      }
+
       return result;
     } catch (error) {
       console.error('Error sending media to WhatsApp API: ', error);
@@ -82,7 +87,7 @@ class WhatsAppService {
    * @param {string} params.baseUrl - Base URL for creating proxy URL
    * @returns {Promise<Object>} - Media info with proxy URL
    */
-  async getMediaInfo({ waBusinessId, mediaId, baseUrl }) {
+  async mediaInfo({ waBusinessId, mediaId, baseUrl }) {
     try {
       if (!mediaId || !waBusinessId || !baseUrl) {
         throw new Error('Missing required parameters: mediaId, waBusinessId, baseUrl');

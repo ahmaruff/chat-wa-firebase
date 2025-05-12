@@ -1,3 +1,5 @@
+const EncryptionService = require('../../../shared/utils/EncryptionService');
+
 class ManageWaConfig{
   constructor(waConfigRepository, channelRepository) {
     this.waConfigRepository = waConfigRepository;
@@ -5,6 +7,18 @@ class ManageWaConfig{
   }
 
   async save(waConfig) {
+    let finalAccessToken = waConfig.accessToken;
+    try {
+      // Try to decrypt. If it works, it’s already encrypted.
+      EncryptionService.decrypt(waConfig.accessToken);
+      // Decryption successful → do nothing, already encrypted
+    } catch (e) {
+      // Decryption failed → assume it's plaintext, encrypt it
+      finalAccessToken = EncryptionService.encrypt(waConfig.accessToken);
+    }
+
+    waConfig.accessToken = finalAccessToken;
+
     try {
       const result = await this.waConfigRepository.save(waConfig);
       return result;
